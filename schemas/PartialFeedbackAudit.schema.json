@@ -1,0 +1,107 @@
+{
+  "$defs": {
+    "FeedbackDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "feedback_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,79}$",
+          "title": "Feedback Id",
+          "type": "string"
+        },
+        "decision": {
+          "enum": [
+            "approve",
+            "withhold"
+          ],
+          "title": "Decision",
+          "type": "string"
+        },
+        "grounded_in_source": {
+          "title": "Grounded In Source",
+          "type": "boolean"
+        },
+        "addresses_validated_issue": {
+          "title": "Addresses Validated Issue",
+          "type": "boolean"
+        },
+        "preserves_problem": {
+          "title": "Preserves Problem",
+          "type": "boolean"
+        },
+        "mathematically_supported": {
+          "title": "Mathematically Supported",
+          "type": "boolean"
+        },
+        "uncertainty_calibrated": {
+          "title": "Uncertainty Calibrated",
+          "type": "boolean"
+        },
+        "rationale": {
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        }
+      },
+      "required": [
+        "feedback_id",
+        "decision",
+        "grounded_in_source",
+        "addresses_validated_issue",
+        "preserves_problem",
+        "mathematically_supported",
+        "uncertainty_calibrated",
+        "rationale"
+      ],
+      "title": "FeedbackDecision",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "issue_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,79}$",
+      "title": "Issue Id",
+      "type": "string"
+    },
+    "issue_review_assessment": {
+      "enum": [
+        "upheld",
+        "disputed",
+        "uncertain"
+      ],
+      "title": "Issue Review Assessment",
+      "type": "string"
+    },
+    "rationale": {
+      "minLength": 1,
+      "title": "Rationale",
+      "type": "string"
+    },
+    "decisions": {
+      "items": {
+        "$ref": "#/$defs/FeedbackDecision"
+      },
+      "title": "Decisions",
+      "type": "array"
+    },
+    "route_rejection_upheld": {
+      "title": "Route Rejection Upheld",
+      "type": "boolean"
+    },
+    "route_rationale": {
+      "minLength": 1,
+      "title": "Route Rationale",
+      "type": "string"
+    }
+  },
+  "required": [
+    "issue_id",
+    "issue_review_assessment",
+    "rationale",
+    "decisions",
+    "route_rejection_upheld",
+    "route_rationale"
+  ],
+  "title": "PartialFeedbackAudit",
+  "type": "object"
+}

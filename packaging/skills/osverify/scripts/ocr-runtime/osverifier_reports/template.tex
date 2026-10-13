@@ -1,0 +1,122 @@
+\documentclass[11pt,reqno]{amsart}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage[hidelinks]{hyperref}
+
+
+
+% Use the paper title only, without legacy task/version date suffixes.
+\title{Referee Report on ``***''}
+\author{OSVerify}
+\date{}
+\setlength{\emergencystretch}{2em}
+
+% Bold run-in paragraph labels in the classic report layout.
+\makeatletter
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{.5\baselineskip\@plus.7\baselineskip}{-.5em}{\normalfont\bfseries}}
+\makeatother
+
+\begin{document}
+\maketitle
+
+
+% Previous heading: Overall opinion
+\section*{Review summary}
+
+Briefly summarize the released findings and their impact. The renderer supplies a compact table with Review status, Issues reported and (when needed) Reference checks. Do not repeat internal scope counts, execution states or audit metadata.
+
+% Previous heading: Major Imprecisions
+\section{Major issues}
+\subsection{Summarize Major error 1 here}
+
+\paragraph{Where the issue occurs}
+
+Precise proof paragraph or formula, with verified paper numbering.
+\begin{quote}
+Short faithful quotation of the disputed step.
+\end{quote}
+
+\paragraph{Related context}
+Background or downstream use, each with its relevance.
+
+\paragraph{Type}
+
+Invalid proof.
+
+\paragraph{Concern}
+
+The cited theorem does not apply here since assumption A may not be satisfied in this setting.
+
+\paragraph{Check}
+
+Here is a counterexample.
+
+\paragraph{Suggestion by OSVerify}
+
+
+
+\subsection{Summarize Major error 2 here}
+
+\paragraph{Where the issue occurs}
+
+Precise statement, hypothesis or formula, with verified paper numbering.
+\begin{quote}
+Short faithful quotation of the disputed passage.
+\end{quote}
+
+\paragraph{Related context}
+Background or downstream use, each with its relevance.
+
+\paragraph{Type}
+
+Wrong lemma.
+
+\paragraph{Concern}
+
+The stated lemma is wrong.
+
+\paragraph{Check}
+
+Here is a counterexample.
+
+\paragraph{Suggestion by OSVerify}
+
+% Previous heading: Minor Imprecisions
+\section{Minor issues}
+
+\subsection{Summarize Minor error 1 here}
+
+\paragraph{Where the issue occurs}
+
+Precise statement, hypothesis or formula, with verified paper numbering.
+\begin{quote}
+Short faithful quotation of the disputed passage.
+\end{quote}
+
+\paragraph{Related context}
+Background or downstream use, each with its relevance.
+
+\paragraph{Type}
+
+The lemma missed an assumption.
+
+\paragraph{Concern}
+
+The lemma is false without this assumption. However, in the setting it was applied, this missing assumption was satisfied.
+
+\paragraph{Check}
+
+Here is a counterexample.
+
+\paragraph{Suggestion by OSVerify}
+
+Add this assumption:
+
+\section*{References not fully checked}
+Name the cited work, the specific result or proof not fully checked, and the actual
+reason. Distinguish inaccessible originals from alternate-source checks. Keep this
+concise; detailed logs and audit paths remain in the internal report.
+
+% The renderer appends the actual report generation date (UTC) in the small gray closing note.
+\end{document}

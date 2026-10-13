@@ -1,0 +1,46 @@
+{
+  "$defs": {
+    "DuplicateMatch": {
+      "additionalProperties": false,
+      "properties": {
+        "issue_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,79}$",
+          "title": "Issue Id",
+          "type": "string"
+        },
+        "duplicate_of": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,79}$",
+          "title": "Duplicate Of",
+          "type": "string"
+        },
+        "rationale": {
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        }
+      },
+      "required": [
+        "issue_id",
+        "duplicate_of",
+        "rationale"
+      ],
+      "title": "DuplicateMatch",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "matches": {
+      "items": {
+        "$ref": "#/$defs/DuplicateMatch"
+      },
+      "title": "Matches",
+      "type": "array"
+    }
+  },
+  "required": [
+    "matches"
+  ],
+  "title": "DuplicatePlan",
+  "type": "object"
+}

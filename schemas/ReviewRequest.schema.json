@@ -1,0 +1,36 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "request_id": {
+      "minLength": 1,
+      "title": "Request Id",
+      "type": "string"
+    },
+    "question": {
+      "minLength": 1,
+      "title": "Question",
+      "type": "string"
+    },
+    "candidate_solution": {
+      "minLength": 1,
+      "title": "Candidate Solution",
+      "type": "string"
+    },
+    "mode": {
+      "default": "full_solution",
+      "enum": [
+        "full_solution",
+        "partial"
+      ],
+      "title": "Mode",
+      "type": "string"
+    }
+  },
+  "required": [
+    "request_id",
+    "question",
+    "candidate_solution"
+  ],
+  "title": "ReviewRequest",
+  "type": "object"
+}

@@ -1,0 +1,183 @@
+{
+  "$defs": {
+    "ReleasedFeedback": {
+      "additionalProperties": false,
+      "properties": {
+        "issue_id": {
+          "title": "Issue Id",
+          "type": "string"
+        },
+        "feedback_id": {
+          "title": "Feedback Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "diagnosis",
+            "repair_request",
+            "repair_suggestion",
+            "clarification_request"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "source_spans": {
+          "items": {
+            "$ref": "#/$defs/SourceSpan"
+          },
+          "title": "Source Spans",
+          "type": "array"
+        },
+        "audit_artifact": {
+          "title": "Audit Artifact",
+          "type": "string"
+        }
+      },
+      "required": [
+        "issue_id",
+        "feedback_id",
+        "kind",
+        "text",
+        "source_spans",
+        "audit_artifact"
+      ],
+      "title": "ReleasedFeedback",
+      "type": "object"
+    },
+    "SourceSpan": {
+      "additionalProperties": false,
+      "description": "One-based, inclusive references into the immutable input, never a summary.",
+      "properties": {
+        "document": {
+          "enum": [
+            "question",
+            "candidate_solution"
+          ],
+          "title": "Document",
+          "type": "string"
+        },
+        "start_line": {
+          "minimum": 1,
+          "title": "Start Line",
+          "type": "integer"
+        },
+        "end_line": {
+          "minimum": 1,
+          "title": "End Line",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "document",
+        "start_line",
+        "end_line"
+      ],
+      "title": "SourceSpan",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "3.0",
+      "default": "3.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "request_id": {
+      "title": "Request Id",
+      "type": "string"
+    },
+    "mode": {
+      "default": "full_solution",
+      "enum": [
+        "full_solution",
+        "partial"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "decision": {
+      "anyOf": [
+        {
+          "enum": [
+            "READY_FOR_HUMAN",
+            "PASS",
+            "REVISE",
+            "REJECT"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Decision"
+    },
+    "run_status": {
+      "enum": [
+        "running",
+        "completed",
+        "incomplete"
+      ],
+      "title": "Run Status",
+      "type": "string"
+    },
+    "backend_kind": {
+      "title": "Backend Kind",
+      "type": "string"
+    },
+    "feedback": {
+      "items": {
+        "$ref": "#/$defs/ReleasedFeedback"
+      },
+      "title": "Feedback",
+      "type": "array"
+    },
+    "diagnostics_artifact": {
+      "default": "diagnostics.json",
+      "title": "Diagnostics Artifact",
+      "type": "string"
+    },
+    "termination_reason": {
+      "anyOf": [
+        {
+          "enum": [
+            "all_nodes_reviewed",
+            "audited_rejection",
+            "execution_incomplete"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Termination Reason"
+    },
+    "coverage_complete": {
+      "default": false,
+      "title": "Coverage Complete",
+      "type": "boolean"
+    },
+    "trajectory_artifact": {
+      "default": "trajectory.jsonl",
+      "title": "Trajectory Artifact",
+      "type": "string"
+    }
+  },
+  "required": [
+    "request_id",
+    "decision",
+    "run_status",
+    "backend_kind",
+    "feedback"
+  ],
+  "title": "WorkflowReport",
+  "type": "object"
+}

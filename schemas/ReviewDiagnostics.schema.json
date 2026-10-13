@@ -1,0 +1,160 @@
+{
+  "$defs": {
+    "FindingStatus": {
+      "additionalProperties": false,
+      "description": "Only status metadata; unapproved mathematical prose stays in internal artifacts.",
+      "properties": {
+        "issue_id": {
+          "title": "Issue Id",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "confirmed",
+            "not_real",
+            "unresolved",
+            "pending",
+            "failed",
+            "audit_blocked"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "enum": [
+                "false_claim",
+                "invalid_inference",
+                "calculation_error",
+                "omission",
+                "presentation",
+                "other"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Kind"
+        },
+        "impact": {
+          "enum": [
+            "blocking",
+            "nonblocking",
+            "unknown"
+          ],
+          "title": "Impact",
+          "type": "string"
+        },
+        "rejection_supported": {
+          "title": "Rejection Supported",
+          "type": "boolean"
+        },
+        "missing_required_content": {
+          "title": "Missing Required Content",
+          "type": "boolean"
+        },
+        "withheld_feedback_count": {
+          "title": "Withheld Feedback Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "issue_id",
+        "status",
+        "kind",
+        "impact",
+        "rejection_supported",
+        "missing_required_content",
+        "withheld_feedback_count"
+      ],
+      "title": "FindingStatus",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Internal accounting; these fields do not create additional workflow decisions.",
+  "properties": {
+    "schema_version": {
+      "const": "2.0",
+      "default": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "request_id": {
+      "title": "Request Id",
+      "type": "string"
+    },
+    "proposer_status": {
+      "enum": [
+        "pending",
+        "completed",
+        "incomplete",
+        "failed"
+      ],
+      "title": "Proposer Status",
+      "type": "string"
+    },
+    "decomposition": {
+      "const": "not_implemented",
+      "default": "not_implemented",
+      "title": "Decomposition",
+      "type": "string"
+    },
+    "issues_proposed": {
+      "title": "Issues Proposed",
+      "type": "integer"
+    },
+    "issues_processed": {
+      "title": "Issues Processed",
+      "type": "integer"
+    },
+    "findings": {
+      "items": {
+        "$ref": "#/$defs/FindingStatus"
+      },
+      "title": "Findings",
+      "type": "array"
+    },
+    "unresolved_issue_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Unresolved Issue Ids",
+      "type": "array"
+    },
+    "execution_errors": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Execution Errors",
+      "type": "array"
+    },
+    "limits": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Limits",
+      "type": "array"
+    },
+    "provenance_artifact": {
+      "default": "manifest.json",
+      "title": "Provenance Artifact",
+      "type": "string"
+    }
+  },
+  "required": [
+    "request_id",
+    "proposer_status",
+    "issues_proposed",
+    "issues_processed",
+    "findings",
+    "unresolved_issue_ids",
+    "execution_errors",
+    "limits"
+  ],
+  "title": "ReviewDiagnostics",
+  "type": "object"
+}

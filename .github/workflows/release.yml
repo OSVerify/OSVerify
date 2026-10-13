@@ -1,0 +1,29 @@
+name: Release
+
+# Pushing a tag such as v0.6.0 tests the tag, builds the agent skill and attaches
+# osverify.zip to that GitHub Release (created here if it does not exist yet).
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  skill:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - run: uv sync --locked
+      - run: uv run --locked pytest -q
+      - run: uv run --locked python packaging/build_skill.py
+      - name: Attach the skill to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 \
+            || gh release create "$GITHUB_REF_NAME" --title "OSVerify ${GITHUB_REF_NAME#v}" --notes "See README.md."
+          gh release upload "$GITHUB_REF_NAME" dist/osverify.zip --clobber

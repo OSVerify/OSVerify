@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+runs/
+.DS_Store
+.env
+.env.*
+!.env.example
+key.env
+auth.json
+.venv-x86_64/
+paper/
+problems/

@@ -1,0 +1,70 @@
+{
+  "format": 1,
+  "source_commit": "257c02dc9019607c6ca56be97ddf1007c3b3394d",
+  "source_worktree_dirty": false,
+  "scope": "mathematical paper referee and partial/full solution only",
+  "files": {
+    "osverifier/__init__.py": "1fa3169e71257174f0f3ff62d8bbbea3c41564a18bc911763f05a51d010a3206",
+    "osverifier/__main__.py": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+    "osverifier/backend.py": "5567dfdd2a00de6236f9217209f754559ba0116f8139b23005050a906560d53f",
+    "osverifier/cli.py": "f96ec441ce12d9fc9dd3c077b3b8ee39f508e3a2dd3658d9595a5925ebf07ada",
+    "osverifier/connection_config.py": "e60452b6c9bf3533fd04b3b4682aad38fc952fb4f075eafd0db7d62abebf6788",
+    "osverifier/demo.py": "264a91add3d655da18972e0fc3069ce3bd2ad9db3da0dbdf66996483cf716c92",
+    "osverifier/exporting.py": "b68bd2235361e23c41575d59e48a9deac493ddcb94f6663a97a3081019e85ec9",
+    "osverifier/frozen.py": "130cf4adcd302cbbe4c9d08511cf6090ac68785979969124de7c701287cd03db",
+    "osverifier/jobs.py": "ec64db0ace1ec3c4301423b9c4d3681df297f092cc1b9dfeaad3d471b1a87099",
+    "osverifier/models.py": "7fe210684dbd346acee3133d6928ea77f6ce5f4a6090d9ab0ee4662c41ddc7bb",
+    "osverifier/pipeline.py": "2d7eba5a519fc1fb7d53428525f5240e7c45f0c4b62e6c460337dc44832c19e9",
+    "osverifier/quota.py": "d445990cbcd0e07a97f4278ea37184a098ae1fe769b7182dade6795b581dd35a",
+    "osverifier/reporting.py": "486b4aafa8f284ea95712997d6eb79e1b894128c83c92064746dbc195827d14a",
+    "osverifier/scheduling.py": "f8093d5596957919f3e638b6b2e381420d293b77dfc64c963a838aa9a51b30ae",
+    "osverifier/skills/audit-duplicate-issues/SKILL.md": "592ab51967c2f26642abb8cab31d27b6d2f53fec521981139e8140b1f1b58b91",
+    "osverifier/skills/audit-verifier-feedback/SKILL.md": "a99b45abbfe20ed8f94f6ec040305af82253d71fd30e7660bfa7d6584201e43e",
+    "osverifier/skills/group-duplicate-issues/SKILL.md": "2fa9deadadbe85f7ea3e3284861dfd4a4e652b0022538a915fc31de1b1a3bbab",
+    "osverifier/skills/policy.md": "ab61d1961c4e0e4d08433a5b7092374ec7c4ff4c3ee325f5492a88a3ba9f2898",
+    "osverifier/skills/propose-solution-issues/SKILL.md": "f7ff378d586d1112c1e3a77c4c330d225c70b7550da79805b22aa0f07a90d563",
+    "osverifier/skills/segment-solution-text/SKILL.md": "1890c5936d94f16c7563c5c91413d0502dfe6223a5f248e44d8152c97356108b",
+    "osverifier/skills/validate-solution-issue/SKILL.md": "2b011c48b369762aaa63b1c605c72daad9227e47ce60ac49a2671bc57ede6a55",
+    "osverifier/storage.py": "053126b9a6d8e5b2f61f7687d776e7308fcc56924657a0378a68cf5bd609ff9c",
+    "osverifier/trajectory.py": "85970fe21b6980a18ebd1e3653b47be61d9d009a866b2d362af216b143fad8a2",
+    "osverifier/workflow.py": "fa973649f026dfe2d906967e88f03c715886615c717061b1d4532bb1efda8748",
+    "osverifier/workflow_models.py": "3e3672d655a2e2f88812915752018ba2efaaf2b4a07425a585405fd676387cd3",
+    "osverifier_gui/__init__.py": "34eb812a703f81c3e753de97f199fc050e71bbd45b1f03101b3ab1ce6525b9c2",
+    "osverifier_gui/paper.py": "15bcc138a416caf72709c3926e5de3992a288f95cfa1eefcd809978d9f1d9d6f",
+    "osverifier_gui/skills/extract-question/SKILL.md": "473d1019d5e4e08037e775e18046bccd362ee6a1859f4eda94471968de4acf0f",
+    "osverifier_reports/__init__.py": "24cad087c175546b054958cbe0b713db863454f8c2e4f6d1b700f56a8aa54611",
+    "osverifier_reports/automatic.py": "09d9d728d45b6ee10b318f19b9cd30b864563b11f77d2725f553979b23edf410",
+    "osverifier_reports/paper.py": "4afff37c3abc06549698f80b734a1d1b52a4cea80e0b80bad2ed5f6761c2b392",
+    "osverifier_reports/skills/audit-paper-severity/SKILL.md": "5aebee93950a83cbded1fe063f02dcb19a3e514cc231e2270a86ed1a0e9745a7",
+    "osverifier_reports/skills/check-referee-report/SKILL.md": "413e2eac2522dd9663c6e88edcaa60f427acd4b96d78b296ea86564e67dc7de0",
+    "osverifier_reports/skills/classify-paper-issues/SKILL.md": "e4f8b94ea8c93c74840008627425346a360377bc4bcd43dea061a08ab343ab02",
+    "osverifier_reports/skills/write-referee-report/SKILL.md": "0daba853a9e523b95cce49455adc2a18b97cd7eee1f50a0ed2c05a04ae157d2e",
+    "osverifier_reports/template.tex": "d5e8bb178e9b3621d966a63720d084678af864270ecd2150889c6a744951a966",
+    "osverifier_reports/writer.py": "f81dee0784b88de0f6f326a9509d164aad0f837d1c8f75582892c77fce66cce3"
+  },
+  "scheduler_overlay": {
+    "source_tree": "a9fffff4ac17af8291b584f48b0756bb041a5bc4",
+    "source_tree_dirty": false,
+    "modules": [
+      "pipeline.py",
+      "workflow.py",
+      "workflow_models.py",
+      "scheduling.py",
+      "jobs.py",
+      "quota.py",
+      "connection_config.py",
+      "storage.py",
+      "trajectory.py",
+      "exporting.py"
+    ],
+    "cli_changes": "worker default and scheduling help only"
+  },
+  "severity_overlay": {
+    "change": "Assess complete released repairs by content, independent of feedback kind",
+    "files": [
+      "osverifier_reports/paper.py",
+      "osverifier_reports/skills/classify-paper-issues/SKILL.md",
+      "osverifier_reports/skills/audit-paper-severity/SKILL.md"
+    ]
+  }
+}

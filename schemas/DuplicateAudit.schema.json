@@ -1,0 +1,51 @@
+{
+  "$defs": {
+    "DuplicateCheck": {
+      "additionalProperties": false,
+      "properties": {
+        "issue_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,79}$",
+          "title": "Issue Id",
+          "type": "string"
+        },
+        "duplicate_of": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,79}$",
+          "title": "Duplicate Of",
+          "type": "string"
+        },
+        "rationale": {
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        },
+        "confirmed": {
+          "title": "Confirmed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "issue_id",
+        "duplicate_of",
+        "rationale",
+        "confirmed"
+      ],
+      "title": "DuplicateCheck",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "checks": {
+      "items": {
+        "$ref": "#/$defs/DuplicateCheck"
+      },
+      "title": "Checks",
+      "type": "array"
+    }
+  },
+  "required": [
+    "checks"
+  ],
+  "title": "DuplicateAudit",
+  "type": "object"
+}

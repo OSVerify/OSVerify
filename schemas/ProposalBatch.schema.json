@@ -1,0 +1,174 @@
+{
+  "$defs": {
+    "FeedbackDraft": {
+      "additionalProperties": false,
+      "properties": {
+        "feedback_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,79}$",
+          "title": "Feedback Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "diagnosis",
+            "repair_request",
+            "repair_suggestion",
+            "clarification_request"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "feedback_id",
+        "kind",
+        "text"
+      ],
+      "title": "FeedbackDraft",
+      "type": "object"
+    },
+    "ProposedIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "issue_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,79}$",
+          "title": "Issue Id",
+          "type": "string"
+        },
+        "scope_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,79}$",
+          "title": "Scope Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "false_claim",
+            "invalid_inference",
+            "calculation_error",
+            "omission",
+            "presentation",
+            "other"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "target": {
+          "minLength": 1,
+          "title": "Target",
+          "type": "string"
+        },
+        "source_spans": {
+          "items": {
+            "$ref": "#/$defs/SourceSpan"
+          },
+          "minItems": 1,
+          "title": "Source Spans",
+          "type": "array"
+        },
+        "allegation": {
+          "minLength": 1,
+          "title": "Allegation",
+          "type": "string"
+        },
+        "evidence": {
+          "minLength": 1,
+          "title": "Evidence",
+          "type": "string"
+        },
+        "proposed_feedback": {
+          "items": {
+            "$ref": "#/$defs/FeedbackDraft"
+          },
+          "title": "Proposed Feedback",
+          "type": "array"
+        }
+      },
+      "required": [
+        "issue_id",
+        "scope_id",
+        "kind",
+        "target",
+        "source_spans",
+        "allegation",
+        "evidence",
+        "proposed_feedback"
+      ],
+      "title": "ProposedIssue",
+      "type": "object"
+    },
+    "SourceSpan": {
+      "additionalProperties": false,
+      "description": "One-based, inclusive references into the immutable input, never a summary.",
+      "properties": {
+        "document": {
+          "enum": [
+            "question",
+            "candidate_solution"
+          ],
+          "title": "Document",
+          "type": "string"
+        },
+        "start_line": {
+          "minimum": 1,
+          "title": "Start Line",
+          "type": "integer"
+        },
+        "end_line": {
+          "minimum": 1,
+          "title": "End Line",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "document",
+        "start_line",
+        "end_line"
+      ],
+      "title": "SourceSpan",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "scope_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,79}$",
+      "title": "Scope Id",
+      "type": "string"
+    },
+    "search_status": {
+      "enum": [
+        "completed",
+        "incomplete"
+      ],
+      "title": "Search Status",
+      "type": "string"
+    },
+    "search_limitations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Search Limitations",
+      "type": "array"
+    },
+    "issues": {
+      "items": {
+        "$ref": "#/$defs/ProposedIssue"
+      },
+      "title": "Issues",
+      "type": "array"
+    }
+  },
+  "required": [
+    "scope_id",
+    "search_status",
+    "search_limitations",
+    "issues"
+  ],
+  "title": "ProposalBatch",
+  "type": "object"
+}

@@ -1,0 +1,156 @@
+{
+  "$defs": {
+    "FeedbackDraft": {
+      "additionalProperties": false,
+      "properties": {
+        "feedback_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,79}$",
+          "title": "Feedback Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "diagnosis",
+            "repair_request",
+            "repair_suggestion",
+            "clarification_request"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "feedback_id",
+        "kind",
+        "text"
+      ],
+      "title": "FeedbackDraft",
+      "type": "object"
+    },
+    "SourceSpan": {
+      "additionalProperties": false,
+      "description": "One-based, inclusive references into the immutable input, never a summary.",
+      "properties": {
+        "document": {
+          "enum": [
+            "question",
+            "candidate_solution"
+          ],
+          "title": "Document",
+          "type": "string"
+        },
+        "start_line": {
+          "minimum": 1,
+          "title": "Start Line",
+          "type": "integer"
+        },
+        "end_line": {
+          "minimum": 1,
+          "title": "End Line",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "document",
+        "start_line",
+        "end_line"
+      ],
+      "title": "SourceSpan",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "issue_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,79}$",
+      "title": "Issue Id",
+      "type": "string"
+    },
+    "assessment": {
+      "enum": [
+        "confirmed",
+        "not_real",
+        "unresolved"
+      ],
+      "title": "Assessment",
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "false_claim",
+        "invalid_inference",
+        "calculation_error",
+        "omission",
+        "presentation",
+        "other"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "impact": {
+      "enum": [
+        "blocking",
+        "nonblocking",
+        "unknown"
+      ],
+      "title": "Impact",
+      "type": "string"
+    },
+    "rejection_supported": {
+      "title": "Rejection Supported",
+      "type": "boolean"
+    },
+    "completion_effect": {
+      "enum": [
+        "none",
+        "missing_required_content",
+        "uncertain"
+      ],
+      "title": "Completion Effect",
+      "type": "string"
+    },
+    "source_spans": {
+      "items": {
+        "$ref": "#/$defs/SourceSpan"
+      },
+      "title": "Source Spans",
+      "type": "array"
+    },
+    "rationale": {
+      "minLength": 1,
+      "title": "Rationale",
+      "type": "string"
+    },
+    "evidence": {
+      "minLength": 1,
+      "title": "Evidence",
+      "type": "string"
+    },
+    "feedback_candidates": {
+      "items": {
+        "$ref": "#/$defs/FeedbackDraft"
+      },
+      "title": "Feedback Candidates",
+      "type": "array"
+    }
+  },
+  "required": [
+    "issue_id",
+    "assessment",
+    "kind",
+    "impact",
+    "rejection_supported",
+    "completion_effect",
+    "source_spans",
+    "rationale",
+    "evidence",
+    "feedback_candidates"
+  ],
+  "title": "IssueReview",
+  "type": "object"
+}

@@ -1,0 +1,464 @@
+{
+  "$defs": {
+    "FindingDetail": {
+      "additionalProperties": false,
+      "properties": {
+        "issue_id": {
+          "title": "Issue Id",
+          "type": "string"
+        },
+        "assessment": {
+          "enum": [
+            "confirmed",
+            "unresolved"
+          ],
+          "title": "Assessment",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "false_claim",
+            "invalid_inference",
+            "calculation_error",
+            "omission",
+            "presentation",
+            "other"
+          ],
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "issue_id",
+        "assessment",
+        "kind"
+      ],
+      "title": "FindingDetail",
+      "type": "object"
+    },
+    "PaperProgress": {
+      "additionalProperties": false,
+      "properties": {
+        "execution": {
+          "enum": [
+            "running",
+            "completed",
+            "failed",
+            "interrupted"
+          ],
+          "title": "Execution",
+          "type": "string"
+        },
+        "search": {
+          "enum": [
+            "pending",
+            "completed",
+            "partial",
+            "unknown"
+          ],
+          "title": "Search",
+          "type": "string"
+        },
+        "scopes_searched": {
+          "default": 0,
+          "title": "Scopes Searched",
+          "type": "integer"
+        },
+        "scopes_total": {
+          "default": 0,
+          "title": "Scopes Total",
+          "type": "integer"
+        },
+        "evidence": {
+          "default": "not_assessed",
+          "enum": [
+            "not_assessed",
+            "no_reported_limits",
+            "limited"
+          ],
+          "title": "Evidence",
+          "type": "string"
+        },
+        "evidence_limits": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Limits",
+          "type": "array"
+        },
+        "search_limits": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Search Limits",
+          "type": "array"
+        },
+        "images": {
+          "default": "not_supplied",
+          "enum": [
+            "not_supplied",
+            "pending",
+            "completed",
+            "partial",
+            "limited"
+          ],
+          "title": "Images",
+          "type": "string"
+        },
+        "image_count": {
+          "default": 0,
+          "title": "Image Count",
+          "type": "integer"
+        },
+        "image_review_calls": {
+          "default": 0,
+          "title": "Image Review Calls",
+          "type": "integer"
+        },
+        "audit": {
+          "default": "pending",
+          "enum": [
+            "pending",
+            "completed",
+            "withheld",
+            "failed",
+            "partial"
+          ],
+          "title": "Audit",
+          "type": "string"
+        },
+        "released_findings": {
+          "default": 0,
+          "title": "Released Findings",
+          "type": "integer"
+        },
+        "withheld_findings": {
+          "default": 0,
+          "title": "Withheld Findings",
+          "type": "integer"
+        },
+        "failed_findings": {
+          "default": 0,
+          "title": "Failed Findings",
+          "type": "integer"
+        },
+        "unresolved_findings": {
+          "default": 0,
+          "title": "Unresolved Findings",
+          "type": "integer"
+        },
+        "unreviewed_findings": {
+          "default": 0,
+          "title": "Unreviewed Findings",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "execution",
+        "search"
+      ],
+      "title": "PaperProgress",
+      "type": "object"
+    },
+    "Rating": {
+      "additionalProperties": false,
+      "properties": {
+        "issue_id": {
+          "title": "Issue Id",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "major",
+            "minor",
+            "unknown"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "rationale": {
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        }
+      },
+      "required": [
+        "issue_id",
+        "severity",
+        "rationale"
+      ],
+      "title": "Rating",
+      "type": "object"
+    },
+    "ReleasedFeedback": {
+      "additionalProperties": false,
+      "properties": {
+        "issue_id": {
+          "title": "Issue Id",
+          "type": "string"
+        },
+        "feedback_id": {
+          "title": "Feedback Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "diagnosis",
+            "repair_request",
+            "repair_suggestion",
+            "clarification_request"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "source_spans": {
+          "items": {
+            "$ref": "#/$defs/SourceSpan"
+          },
+          "title": "Source Spans",
+          "type": "array"
+        },
+        "audit_artifact": {
+          "title": "Audit Artifact",
+          "type": "string"
+        }
+      },
+      "required": [
+        "issue_id",
+        "feedback_id",
+        "kind",
+        "text",
+        "source_spans",
+        "audit_artifact"
+      ],
+      "title": "ReleasedFeedback",
+      "type": "object"
+    },
+    "SourceSpan": {
+      "additionalProperties": false,
+      "description": "One-based, inclusive references into the immutable input, never a summary.",
+      "properties": {
+        "document": {
+          "enum": [
+            "question",
+            "candidate_solution"
+          ],
+          "title": "Document",
+          "type": "string"
+        },
+        "start_line": {
+          "minimum": 1,
+          "title": "Start Line",
+          "type": "integer"
+        },
+        "end_line": {
+          "minimum": 1,
+          "title": "End Line",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "document",
+        "start_line",
+        "end_line"
+      ],
+      "title": "SourceSpan",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "paper-1.1",
+      "enum": [
+        "paper-1.0",
+        "paper-1.1",
+        "paper-1.2"
+      ],
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "review_kind": {
+      "const": "paper",
+      "default": "paper",
+      "title": "Review Kind",
+      "type": "string"
+    },
+    "field": {
+      "default": "math",
+      "enum": [
+        "math",
+        "ai"
+      ],
+      "title": "Field",
+      "type": "string"
+    },
+    "request_id": {
+      "title": "Request Id",
+      "type": "string"
+    },
+    "run_status": {
+      "enum": [
+        "running",
+        "completed",
+        "incomplete"
+      ],
+      "title": "Run Status",
+      "type": "string"
+    },
+    "backend_kind": {
+      "title": "Backend Kind",
+      "type": "string"
+    },
+    "coverage_complete": {
+      "title": "Coverage Complete",
+      "type": "boolean"
+    },
+    "termination_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Termination Reason"
+    },
+    "feedback": {
+      "items": {
+        "$ref": "#/$defs/ReleasedFeedback"
+      },
+      "title": "Feedback",
+      "type": "array"
+    },
+    "issues": {
+      "items": {
+        "$ref": "#/$defs/Rating"
+      },
+      "title": "Issues",
+      "type": "array"
+    },
+    "finding_details": {
+      "items": {
+        "$ref": "#/$defs/FindingDetail"
+      },
+      "title": "Finding Details",
+      "type": "array"
+    },
+    "reference_limitations": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Reference Limitations",
+      "type": "array"
+    },
+    "supplemental_reviews": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Supplemental Reviews",
+      "type": "array"
+    },
+    "progress": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PaperProgress"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "classification_status": {
+      "default": "pending",
+      "enum": [
+        "pending",
+        "completed",
+        "withheld",
+        "failed",
+        "skipped"
+      ],
+      "title": "Classification Status",
+      "type": "string"
+    },
+    "classification_error": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Classification Error"
+    },
+    "classification_skip_reason": {
+      "anyOf": [
+        {
+          "enum": [
+            "quota_exhausted",
+            "verification_interrupted",
+            "verification_failed",
+            "no_released_findings"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Classification Skip Reason"
+    },
+    "interruption_reason": {
+      "anyOf": [
+        {
+          "const": "quota_exhausted",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Interruption Reason"
+    },
+    "interruption_phase": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Interruption Phase"
+    },
+    "diagnostics_artifact": {
+      "default": ".verification/diagnostics.json",
+      "title": "Diagnostics Artifact",
+      "type": "string"
+    }
+  },
+  "required": [
+    "request_id",
+    "run_status",
+    "backend_kind",
+    "coverage_complete",
+    "feedback",
+    "issues"
+  ],
+  "title": "PaperReport",
+  "type": "object"
+}

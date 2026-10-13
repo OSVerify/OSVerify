@@ -1,0 +1,48 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "osverify"
+version = "0.6.0"
+description = "OSVerify: one-sided review of mathematical solutions and papers with independently audited feedback"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE.md"]
+requires-python = ">=3.12"
+dependencies = [
+    "mistune>=3,<4",
+    "pydantic>=2.10,<3",
+    "pillow>=11,<13",
+]
+
+[project.urls]
+Homepage = "https://osverify.github.io"
+Repository = "https://github.com/OSVerify/OSVerify"
+
+[project.scripts]
+osverify = "osverifier.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8,<9", "ruff>=0.11"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/osverifier", "src/osverifier_reports"]
+
+[tool.hatch.build.targets.sdist]
+# Repo discovery links must not consume/deduplicate their packaged source targets.
+exclude = ["/.agents"]
+skip-excluded-dirs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+# Frozen skill runtimes are byte-for-byte snapshots of earlier source.
+extend-exclude = ["packaging/skills/osverify/scripts/runtime", "packaging/skills/osverify/scripts/ocr-runtime",
+                  "packaging/skills/osverify/scripts/review-runtime"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = ["E501"]

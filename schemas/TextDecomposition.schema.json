@@ -1,0 +1,51 @@
+{
+  "$defs": {
+    "TextSegment": {
+      "additionalProperties": false,
+      "properties": {
+        "start_line": {
+          "minimum": 1,
+          "title": "Start Line",
+          "type": "integer"
+        },
+        "end_line": {
+          "minimum": 1,
+          "title": "End Line",
+          "type": "integer"
+        },
+        "context_before": {
+          "title": "Context Before",
+          "type": "string"
+        },
+        "context_after": {
+          "title": "Context After",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start_line",
+        "end_line",
+        "context_before",
+        "context_after"
+      ],
+      "title": "TextSegment",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "segments": {
+      "items": {
+        "$ref": "#/$defs/TextSegment"
+      },
+      "minItems": 1,
+      "title": "Segments",
+      "type": "array"
+    }
+  },
+  "required": [
+    "segments"
+  ],
+  "title": "TextDecomposition",
+  "type": "object"
+}

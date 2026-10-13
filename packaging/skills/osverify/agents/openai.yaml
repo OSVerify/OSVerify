@@ -1,0 +1,4 @@
+interface:
+  display_name: "OSVerify"
+  short_description: "Audited proof checking and paper referee review"
+  default_prompt: "Use $osverify to review this paper or solution and return audited feedback."
