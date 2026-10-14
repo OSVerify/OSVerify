@@ -8,6 +8,7 @@
 <p align="center"><b>One-sided verification under limited expert review</b></p>
 
 <p align="center">
+  <a href="https://arxiv.org/abs/2610.18089">Paper</a> ·
   <a href="https://osverify.github.io">Website</a> ·
   <a href="https://github.com/OSVerify/Rethlas-OSV">Rethlas-OSV desktop app (beta)</a> ·
   <a href="docs/guide.md">Guide</a>
@@ -121,6 +122,22 @@ call is kept in the run directory. See `osverify <command> --help` for all optio
 - [Output contract](docs/output-contract.md): what each report field means
 - [Literature tools](docs/literature-tools.md): how cited references are retrieved and checked
 - [Development notes](AGENTS.md)
+
+## Citation
+
+If you use OSVerify in your research, please cite our [paper](https://arxiv.org/abs/2610.18089):
+
+```bibtex
+@misc{nie2026osverify,
+  title         = {One-Sided Verification Under Limited Expert Review},
+  author        = {Nie, Fan and Ye, Haotian and Liu, Shurui and Wang, Zihao and Ermon, Stefano and Zou, James},
+  year          = {2026},
+  eprint        = {2610.18089},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.AI},
+  url           = {https://arxiv.org/abs/2610.18089}
+}
+```
 
 ## License
 
