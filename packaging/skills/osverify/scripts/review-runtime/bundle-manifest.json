@@ -1,10 +1,10 @@
 {
   "format": 1,
-  "source_tree": "a9fffff4ac17af8291b584f48b0756bb041a5bc4",
+  "source_tree": "5125fcb599c39071070b3ac66b90aa77555c1ecb",
   "source_tree_dirty": true,
   "scope": "solution and paper review (native or checked PDF, math/AI) with literature tools; no generation",
   "files": {
-    "osverifier/__init__.py": "ea5fa35472db8beb77cd94217414e861bd148b9b6661c7a57c246b0a95f0eddb",
+    "osverifier/__init__.py": "a073bfda8d3923e72f982e524b4b6da4e2e611953ed1d886397648835d3ee25b",
     "osverifier/__main__.py": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
     "osverifier/backend.py": "1f0e57edec437c1a4243446a9f31c575042b08c9b8950e35aec56ca0630cbd83",
     "osverifier/cli.py": "7f529237e0d60651789984db165d1ad1e70a9d176e76b07e7d83bab1e77c80ca",
