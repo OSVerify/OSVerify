@@ -40,6 +40,10 @@ not audited feedback. CLI logs contain available outputs, not guaranteed hidden 
 
 ## Public decisions
 
+The table below describes full-solution review. Partial progress uses `PASS` instead
+of `READY_FOR_HUMAN`; paper review has no overall solution verdict. See the
+[guide](guide.md#solution-decisions) for the modes side by side.
+
 | `decision` | Meaning and next step |
 | --- | --- |
 | `READY_FOR_HUMAN` | Automated review finished with no outstanding issue or revision feedback. Send the candidate for final human confirmation. |
@@ -133,7 +137,7 @@ The public interface is simple while the internal gates remain explicit:
    approved diagnosis or repair request. Approved text is copied verbatim.
 
 Each issue's validator and feedback auditor run sequentially in fresh Codex sessions.
-Different issue chains run concurrently, defaulting to at most 8 active Codex calls.
+Different issue chains run concurrently, defaulting to at most 16 active Codex calls.
 This is concurrency, not repeated voting. All three roles default to `xhigh` effort
 and live web search; explicit runtime overrides are preserved.
 

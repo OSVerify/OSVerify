@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-import fcntl
 import hashlib
 import json
 import os
 import tempfile
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
+
+from .locking import file_lock
 
 
 class FrozenRunMismatch(ValueError):
@@ -53,12 +54,9 @@ def package_fingerprint() -> str:
 @contextmanager
 def run_lock(directory: Path):
     directory.mkdir(parents=True, exist_ok=True)
-    with (directory / ".lock").open("a+", encoding="utf-8") as handle:
+    with ExitStack() as stack:
         try:
-            fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            stack.enter_context(file_lock(directory / ".lock"))
         except BlockingIOError as exc:
             raise RuntimeError("another verifier process owns this run directory") from exc
-        try:
-            yield
-        finally:
-            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+        yield

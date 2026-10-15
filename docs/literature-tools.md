@@ -43,12 +43,43 @@ model-call timeout remains an independent outer limit; it is not changed here.
 
 ## Content and evidence
 
-HTML processing distinguishes scholarly text, navigation/abstract landing pages,
-and obvious access challenges. TeX math annotations, MathML `alttext`, formula
+HTML processing distinguishes scholarly text, ordinary web pages,
+navigation/abstract landing pages, and access challenges. Project pages, personal
+homepages and result announcements can be read without paper-style headings.
+They carry `source_kind=web_page`; this does not establish that an underlying
+paper or proof was retrieved. Markdown, plain text and source-code files carry
+`source_kind=text_file`; code is read as text and never executed. GitHub `blob`
+links resolve to their raw files. Binary data is not accepted as text merely
+because its URL ends in `.md` or its server declares `text/plain`.
+
+Abstract-only pages, journal catalogues, access challenges and empty JavaScript
+shells remain unresolved. Explicit scholarly download links are followed to the
+paper rather than treating the landing page as its full text.
+TeX math annotations, MathML `alttext`, formula
 image descriptions, and structural MathML are preserved where available. PDF
 extraction and page rendering continue to use Poppler. Extraction is fallible:
 read the original PDF pixels when notation matters. A readable representation
 is not proof that every required passage was retrieved or interpreted correctly.
+
+### Diagnose an unavailable source
+
+Inspect `references/<url-hash>/receipt.json` and its immutable attempt receipts.
+The `retrievals` entries record the requested/resolved URLs, HTTP status when
+available, downloaded bytes and the error category:
+
+| Category | Meaning |
+| --- | --- |
+| `metadata_only` | A page was downloaded, but contains only navigation/metadata or insufficient readable content. |
+| `unsupported_format` | Download succeeded, but the body has no supported readable representation. |
+| `access_challenge` / `access_denied` | A browser challenge or HTTP permission failure prevented reading. |
+| `dns`, `tls_certificate`, `timeout` | Address resolution, certificate or connection/download failure. |
+| `truncated` | The server did not deliver the complete declared response body. |
+
+These distinguish retrieval failures from an MCP startup or tool-process failure.
+Share the failed URL and the relevant receipt/error when reporting a problem;
+raw model traces can contain private paper text. File locks use `flock` on Unix
+and `msvcrt.locking` on native Windows. Windows transport and provider behavior
+still depend on the local Codex installation.
 
 An access receipt describes a URL and each retrieval attempt. A dependency check
 describes a mathematical obligation in the submitted paper. These have separate
@@ -69,7 +100,9 @@ auditing remain mandatory.
 
 ## Cache and frozen runs
 
-Each new store has a version marker. Source bodies and per-attempt receipts are
+New stores use version 4 for web-page/text-file handling. Earlier stores must use
+their original runtime; this update does not reinterpret old retrieval results.
+Source bodies and per-attempt receipts are
 append-only; `receipt.json` is an index to the latest attempt. Later page requests
 add a new view directory instead of changing earlier PDF/text/image artifacts.
 Per-URL process locks deduplicate concurrent fetches without serializing unrelated
@@ -140,9 +173,9 @@ character counts are retained in navigation and access receipts. The full raw HT
 is still saved for inspection. Extraction remains heuristic; verify title, authors,
 version and the actual required passage independently.
 
-New stores use version 3. The new code refuses writes to prior version-2 stores,
-so earlier fulltext classifications cannot silently carry into a fresh-policy run.
-Use a new run directory; resume frozen runs with their original pinned runtime.
+Store-version isolation prevents earlier fulltext classifications from silently
+carrying into a fresh-policy run. See [Cache and frozen runs](#cache-and-frozen-runs)
+for the current version; resume frozen runs with their original pinned runtime.
 
 ## Catalogue and fallback validation (2026-10-10)
 

@@ -1,4 +1,4 @@
-"""Conservative scholarly HTML extraction; source text is never executable input."""
+"""Extract scholarly text and ordinary web pages without conflating their evidence."""
 from __future__ import annotations
 
 import re
@@ -107,9 +107,16 @@ def text_of(node):
 
 
 def _metadata_region(node):
-    labels = re.split(r'[\s_-]+', (node.attrs.get('class', '') + ' ' + node.attrs.get('id', '')).lower())
+    # Match semantic containers, not words inside layout utility classes such as
+    # "toc-visible:md:grid-cols-10", "toc-collision-target" or CSS "contents".
+    labels = set(node.attrs.get('class', '').lower().split())
+    region_id = node.attrs.get('id', '').lower()
+    metadata_labels = {'abstract', 'abstracts', 'article-abstract', 'article_abstract',
+                       'abstract-section', 'abstract_section', 'ltx_abstract',
+                       'toc', 'article-toc', 'ltx_toc', 'table-of-contents', 'table_of_contents',
+                       'bibliography', 'references', 'ref-list', 'ref_list', 'ltx_bibliography'}
     return (node.tag in {'nav', 'header', 'footer', 'aside', 'form'}
-            or bool(set(labels) & {'abstract', 'abstracts', 'toc', 'contents', 'bibliography', 'references', 'ref-list'})
+            or bool(labels & metadata_labels) or region_id in metadata_labels | {'contents'}
             or node.attrs.get('role') in {'doc-abstract', 'doc-toc', 'doc-bibliography'})
 
 
@@ -237,8 +244,23 @@ def extract_html(raw: str, url: str) -> dict:
         # Issue-page PDF controls refer to multiple unrelated works. Do not
         # silently replace a failed article URL with the first current article.
         candidates = []
+    # A readable project page or announcement need not look like a paper. Keep
+    # it distinct from full scholarly text, and retain the landing-page guards.
+    scholarly_landing = (scholarly_host or bool(candidates)
+                        or any(key.startswith('citation_') for key in metadata)
+                        or parts.path.startswith('/abs/') or '/article/abs/' in parts.path)
+    abstract_label = any(n.tag in {'b', 'strong', 'h1', 'h2', 'h3'}
+                         and re.fullmatch(r'abstract\s*[:.]?', text_of(n).strip(), re.I)
+                         for n in nodes)
+    web_page = (not ready and not challenge and not metadata_page and not scholarly_landing
+                and not abstract_label and len(body_text) - link_chars >= 30)
+    kind = 'challenge' if challenge else 'fulltext' if ready else 'web_page' if web_page else 'landing_page'
+    if web_page:
+        # Do not return navigation/abstract text discarded by the classifier.
+        text = re.sub(r'[ \t]+', ' ', text_of(body))
+        text = re.sub(r'\n\s*\n+', '\n\n', text).strip()
     return {'title': title, 'text': text, 'metadata': metadata, 'candidates': candidates,
-            'kind': 'challenge' if challenge else 'fulltext' if ready else 'landing_page',
-            'classification': {'reason': 'access_challenge' if challenge else 'catalogue_or_product_page' if metadata_page else 'body_evidence' if ready else 'insufficient_body_evidence',
+            'kind': kind,
+            'classification': {'reason': 'access_challenge' if challenge else 'catalogue_or_product_page' if metadata_page else 'body_evidence' if ready else 'readable_web_page' if web_page else 'insufficient_body_evidence',
                                'body_char_count': len(body_text), 'excluded_regions': sorted(excluded)},
             'math_extraction': 'TeX annotations/alttext preferred; structural MathML fallback; inspect original for ambiguous notation'}

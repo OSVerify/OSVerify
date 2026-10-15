@@ -14,15 +14,14 @@
   <a href="docs/guide.md">Guide</a>
 </p>
 
-AI can now propose candidate solutions to hard scientific problems far faster than human
-experts can review them, and many such problems have no reliable automated evaluation.
-OSVerify is a one-sided verifier: it rejects as many invalid candidates as possible while
-keeping the false-rejection rate of valid ones low, so that expert time goes to the
-candidates most likely to be correct.
+OSVerify reviews mathematical solutions and research papers and produces audited
+feedback for human review. It is a one-sided verifier: its goal is to reject as many
+invalid candidates as possible while keeping false rejections of valid ones low,
+so that expert time goes to the candidates most likely to be correct.
 
 Verifying a specific error is often easier than discovering one, so OSVerify decouples
-**error proposal**, which searches for errors at different granularities through
-hierarchical decomposition, from **error validation**, which separates substantial errors
+**error proposal**, which searches the whole text and its segments, from
+**error validation**, which separates substantial errors
 from minor or hallucinated ones. Only feedback that an independent auditor approves word
 for word is released, and the work under review is never rewritten. Passing review means
 *ready for expert confirmation*, not *certified correct*. OSVerify has been used to find
@@ -39,13 +38,15 @@ are welcome.
 Requires Python 3.12+, [uv](https://docs.astral.sh/uv/), and the
 [Codex CLI](https://github.com/openai/codex) 0.162 or newer, signed in with your own account
 (older CLIs cannot use current models such as gpt-6-astra).
-Optional: XeLaTeX for PDF referee reports, Poppler for PDF papers.
+PDF inputs also require Poppler; generating referee-report PDFs requires XeLaTeX or LuaLaTeX.
 
 ```bash
 git clone https://github.com/OSVerify/OSVerify && cd OSVerify
 uv sync
 uv run osverify demo --run-dir runs/demo   # offline walkthrough, no model calls
 ```
+
+Open `runs/demo/report.md` to see the output of a scripted review.
 
 ## Install the agent skill
 
@@ -71,15 +72,18 @@ uv run osverify verify --question question.md --solution solution.md \
   --decompose --run-dir runs/my-solution
 ```
 
-The review ends with one decision; the audited feedback is in `runs/my-solution/report.md`.
+A completed full-solution review returns one decision. Read the status and audited
+feedback in `runs/my-solution/report.md`; an interrupted review may have no decision yet.
 
 | Decision | Meaning |
 | --- | --- |
 | `READY_FOR_HUMAN` | Finished with nothing outstanding; hand off for final human confirmation. |
 | `REVISE` | Apply the released feedback: fixable errors, omissions or needed clarifications. |
-| `REJECT` | A confirmed blocking error or a missing core part of the argument. |
+| `REJECT` | An audited blocking error or demonstrated missing core obligation warrants rejection. |
 
 Add `--mode partial` to check unfinished progress against the original question.
+A clean partial review returns `PASS` instead of `READY_FOR_HUMAN`; see the
+[guide](docs/guide.md#solution-decisions) for the meaning of each result.
 
 ## Review a paper
 
@@ -93,12 +97,15 @@ uv run osverify verify --review-type paper --paper paper.tex \
 - Without `--question`, the results to review are chosen automatically:
   `--targets smart` (default: the main theorems and the key steps they rely on),
   `lazy` (results stated in the introduction), `manual --labels thm:main ...`, or `full`.
-- Issues are grouped as Major, Minor or Unclassified, and a referee report PDF is
-  produced when the review completes.
+- Paper reports show findings and coverage, without an overall solution verdict.
+  Issues are grouped as Major, Minor or Unclassified using a
+  [repair-based classification](docs/guide.md#paper-findings).
+- A referee report PDF is generated when reporting and compilation succeed.
+  Add `--no-report` to skip it; `report.md` remains available in the run directory.
 
 ## Models
 
-The default model is `gpt-6-astra`. `osverify models` lists the models your Codex
+The default model is `gpt-6-astra`. `uv run osverify models` lists the models your Codex
 account offers; choose one with `--model`, for example `--model gpt-6.1-sol` or
 `--model gpt-5.6-sol`.
 
@@ -108,17 +115,18 @@ account offers; choose one with `--model`, for example `--model gpt-6.1-sol` or
 | --- | --- |
 | `osverify verify` | Review a solution, or a paper with `--review-type paper` |
 | `osverify ocr` | Transcribe a PDF on its own; reuse it with `verify --ocr-dir` |
-| `osverify report` | Draft a referee report from a finished review |
+| `osverify report` | Draft a referee report from a saved, stopped review |
 | `osverify export` | Export a review as LaTeX or Markdown, without model calls |
 | `osverify models` | List the models you can choose with `--model` |
 | `osverify demo` | Offline scripted demonstration |
 
 Rerun the same command to resume an interrupted review. Every input, prompt and model
-call is kept in the run directory. See `osverify <command> --help` for all options.
+call is kept in the run directory. See `uv run osverify <command> --help` for all options.
 
 ## Documentation
 
-- [Guide](docs/guide.md): workflows, options, artifacts, resume and quota behavior
+- [Guide](docs/guide.md): run a review, read results, choose options and resume
+- [Runtime reference](docs/runtime-reference.md): internals, configuration and Python integration
 - [Output contract](docs/output-contract.md): what each report field means
 - [Literature tools](docs/literature-tools.md): how cited references are retrieved and checked
 - [Development notes](AGENTS.md)
