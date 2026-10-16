@@ -18,6 +18,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: uv sync --locked
+      - run: sudo apt-get update && sudo apt-get install -y poppler-utils
       - run: uv run --locked pytest -q
       - run: uv run --locked python packaging/build_skill.py
       - name: Attach the skill to the release

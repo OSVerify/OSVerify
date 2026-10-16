@@ -61,6 +61,13 @@ extraction and page rendering continue to use Poppler. Extraction is fallible:
 read the original PDF pixels when notation matters. A readable representation
 is not proof that every required passage was retrieved or interpreted correctly.
 
+PDF text extraction and page rendering fail independently. If `pdftotext` is
+missing, times out or produces no text, the reader tries original page images
+(first page by default; request other pages explicitly). A failed page render
+does not discard readable text or other successfully rendered pages. Image-only
+reads return pixels even when a literal text query has no match; this is not a
+successful text match. Extracted text is decoded as UTF-8 on all platforms.
+
 ### Diagnose an unavailable source
 
 Inspect `references/<url-hash>/receipt.json` and its immutable attempt receipts.
@@ -74,6 +81,20 @@ available, downloaded bytes and the error category:
 | `access_challenge` / `access_denied` | A browser challenge or HTTP permission failure prevented reading. |
 | `dns`, `tls_certificate`, `timeout` | Address resolution, certificate or connection/download failure. |
 | `truncated` | The server did not deliver the complete declared response body. |
+| `pdf_processing` | PDF download succeeded, but neither text extraction nor page rendering produced readable material. |
+
+For PDFs, `processing_errors` records the stage (`text_extraction` or
+`page_render`), tool, requested page when applicable, and cause (`tool_missing`,
+`timeout`, `tool_failed`, or `empty_output`). Nonzero tool exits retain their code
+and a bounded stderr excerpt. These diagnostics can coexist with readable text
+or images. `read_reference` includes them and reports `page_image_status` so a
+missing image cannot look like a successful render. Earlier receipts retain
+errors even if a later cached-page retry succeeds.
+
+If a tool is missing, run `pdftotext -v` and `pdftoppm -v` in the same environment
+that launches OSVerify. For Ubuntu/Debian under WSL, install `poppler-utils`
+inside WSL (`sudo apt-get install poppler-utils`); a Windows installation is not
+necessarily on the WSL process's PATH.
 
 These distinguish retrieval failures from an MCP startup or tool-process failure.
 Share the failed URL and the relevant receipt/error when reporting a problem;
@@ -100,7 +121,7 @@ auditing remain mandatory.
 
 ## Cache and frozen runs
 
-New stores use version 4 for web-page/text-file handling. Earlier stores must use
+New stores use version 5 for independent PDF text/image fallbacks and processing diagnostics. Earlier stores must use
 their original runtime; this update does not reinterpret old retrieval results.
 Source bodies and per-attempt receipts are
 append-only; `receipt.json` is an index to the latest attempt. Later page requests

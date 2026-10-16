@@ -140,6 +140,32 @@ class UnsupportedFormat(ValueError):
     """Downloaded successfully, but no supported readable representation exists."""
 
 
+class PdfProcessingError(ValueError):
+    """PDF download succeeded but neither text nor page images are readable."""
+
+
+def run_pdf_tool(command, output, *, stage, page=None):
+    """Return a bounded diagnostic instead of preventing the other PDF reader."""
+    error = {'stage': stage, 'tool': command[0]}
+    if page is not None:
+        error['page'] = page
+    try:
+        result = subprocess.run(command, capture_output=True, timeout=60)
+        if result.returncode:
+            stderr = getattr(result, 'stderr', b'') or b''
+            if isinstance(stderr, bytes):
+                stderr = stderr.decode('utf-8', errors='replace')
+            return {**error, 'kind': 'tool_failed', 'returncode': result.returncode,
+                    'message': stderr.strip()[:300] or 'PDF tool returned a nonzero exit code'}
+        if not output.is_file() or not output.stat().st_size:
+            return {**error, 'kind': 'empty_output', 'message': 'PDF tool produced no usable output'}
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return {**error, 'kind': 'tool_missing' if isinstance(exc, FileNotFoundError)
+                else 'timeout' if isinstance(exc, subprocess.TimeoutExpired) else 'tool_failed',
+                'message': str(exc)[:300]}
+    return None
+
+
 def readable_text_file(text, content_type, url):
     """Allow declared/plain source text without mistaking binary data for prose."""
     media_type = content_type.partition(';')[0].strip().lower()
@@ -235,12 +261,12 @@ class ReferenceStore:
         with file_lock(self.directory / '.initialize.lock', timeout=self.wait_timeout_seconds):
             marker = self.directory / 'store-version.json'
             if marker.exists():
-                if read_json(marker) != {'version': 4}:
+                if read_json(marker) != {'version': 5}:
                     raise FrozenRunMismatch('Reference store version changed; use a new run directory')
             elif any(self.directory.glob('*/receipt.json')):
                 raise FrozenRunMismatch('Historical reference store is read-only; use a new run directory')
             else:
-                atomic_json(marker, {'version': 4})
+                atomic_json(marker, {'version': 5})
 
     def fetch(self, url, pages=()):
         import uuid
@@ -277,30 +303,52 @@ class ReferenceStore:
 
     @staticmethod
     def _render(pdf, pages, folder):
-        rendered = []
+        rendered, errors = [], []
         for page in sorted(set(pages))[:6]:
             if type(page) is not int or page < 1:
                 raise ValueError('PDF pages must be positive integers')
-            result = subprocess.run(['pdftoppm', '-f', str(page), '-l', str(page), '-singlefile', '-scale-to', '1800', '-png', str(pdf), str(folder / f'page-{page}')], capture_output=True, timeout=60)
             path = folder / f'page-{page}.png'
-            if result.returncode == 0 and path.exists():
+            error = run_pdf_tool(['pdftoppm', '-f', str(page), '-l', str(page), '-singlefile', '-scale-to', '1800', '-png', str(pdf), str(folder / f'page-{page}')],
+                                 path, stage='page_render', page=page)
+            if error:
+                errors.append(error)
+            else:
                 rendered.append({'page': page, 'path': str(path.resolve())})
-        return rendered
+        return rendered, errors
 
     def _add_pages(self, record, pages, folder):
         import uuid
-        missing = set(pages) - {p['page'] for p in record.get('page_images', [])}
+        missing = sorted(set(pages) - {p['page'] for p in record.get('page_images', [])})[:6]
         if not missing or not record.get('pdf_path'):
             return record
         record = deepcopy(record)
         view = folder / f'view-{uuid.uuid4().hex}'
         view.mkdir()
-        try:
-            record.setdefault('page_images', []).extend(self._render(record['pdf_path'], missing, view))
-        except (OSError, subprocess.TimeoutExpired) as exc:
-            record['render_error'] = str(exc)[:300]
+        rendered, errors = self._render(record['pdf_path'], missing, view)
+        record.setdefault('page_images', []).extend(rendered)
+        # Current view reflects the latest attempt; earlier receipts retain failures.
+        record['processing_errors'] = [e for e in record.get('processing_errors', [])
+                                       if e['stage'] != 'page_render' or e.get('page') not in missing] + errors
         self._receipt(record, folder, view)
         return record
+
+    def _read_pdf(self, data, pages, folder, record):
+        pdf, output = folder / 'source.pdf', folder / 'source.txt'
+        pdf.write_bytes(data)
+        record.update(format='pdf', pdf_path=str(pdf.resolve()), text_path=None, page_images=[])
+        error = run_pdf_tool(['pdftotext', '-enc', 'UTF-8', '-layout', str(pdf), str(output)],
+                             output, stage='text_extraction')
+        if error is None and not output.read_text(encoding='utf-8', errors='replace').strip():
+            error = {'stage': 'text_extraction', 'tool': 'pdftotext', 'kind': 'empty_output',
+                     'message': 'PDF has no extractable text; inspect original page images'}
+        text_ready = error is None
+        # Page 1 exists in every readable PDF; do not guess a page count for scans.
+        rendered, errors = self._render(pdf, pages or ([] if text_ready else [1]), folder)
+        record.update(text_path=str(output.resolve()) if text_ready else None, page_images=rendered,
+                      processing_errors=([error] if error else []) + errors,
+                      content_quality='text_extracted' if text_ready else 'image_only' if rendered else 'unreadable')
+        if not text_ready and not rendered:
+            raise PdfProcessingError('PDF downloaded, but text extraction and page rendering failed; inspect processing_errors')
 
     def _retrieve(self, url, pages, attempt, record):
         import re
@@ -338,16 +386,15 @@ class ReferenceStore:
                     content_type = headers.get('Content-Type', '')
                 item.update(final_url=final_url, content_type=content_type, byte_count=len(data))
                 record['final_url'] = final_url
+                # A later candidate must not inherit another source's PDF paths/errors.
+                for name in ('format', 'pdf_path', 'text_path', 'page_images', 'processing_errors',
+                             'content_quality', 'source_kind', 'html_path', 'title', 'document_metadata'):
+                    record.pop(name, None)
                 if data.startswith(b'%PDF-'):
-                    pdf, output = folder / 'source.pdf', folder / 'source.txt'
-                    pdf.write_bytes(data)
-                    converted = subprocess.run(['pdftotext', '-layout', str(pdf), str(output)], capture_output=True, timeout=60)
-                    text_ready = converted.returncode == 0 and output.exists() and bool(output.read_text(errors='replace').strip())
-                    rendered = self._render(pdf, pages or ([] if text_ready else [1, 2, 3]), folder)
-                    if not text_ready and not rendered:
-                        raise ValueError('No readable text/pages; source inspection remains unresolved')
-                    record.update(pdf_path=str(pdf.resolve()), text_path=str(output.resolve()) if text_ready else None,
-                                  page_images=rendered, format='pdf', content_quality='text_extracted' if text_ready else 'image_only')
+                    try:
+                        self._read_pdf(data, pages, folder, record)
+                    finally:
+                        item['processing_errors'] = record.get('processing_errors', [])
                 else:
                     match = re.search(r'charset\s*=\s*["\']?([^;\s"\']+)', content_type, re.I)
                     encoding = match.group(1) if match else 'utf-8'
@@ -399,6 +446,7 @@ class ReferenceStore:
             except Exception as exc:  # Any source failure becomes an access receipt, never a crash.
                 cause = exc.reason if isinstance(exc, urllib.error.URLError) else exc
                 item['error_kind'] = ('truncated' if isinstance(exc, (TruncatedDownload, http.client.IncompleteRead))
+                                      else 'pdf_processing' if isinstance(exc, PdfProcessingError)
                                       else 'unsupported_format' if isinstance(exc, UnsupportedFormat)
                                       else 'tls_certificate' if isinstance(cause, ssl.SSLError) or 'CERTIFICATE_VERIFY_FAILED' in str(exc)
                                       else 'timeout' if isinstance(cause, (TimeoutError, subprocess.TimeoutExpired)) or 'timed out' in str(exc)

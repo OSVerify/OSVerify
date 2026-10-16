@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "osverify"
-version = "0.6.1"
+version = "0.6.2"
 description = "OSVerify: one-sided review of mathematical solutions and papers with independently audited feedback"
 readme = "README.md"
 license = "Apache-2.0"

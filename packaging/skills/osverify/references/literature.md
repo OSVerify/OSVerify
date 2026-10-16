@@ -9,6 +9,13 @@ MCP setup. Each role must inspect the material supporting its own judgment.
   PDF and LaTeX, follows bounded scholarly full-text links, and preserves explicit
   arXiv versions. Check title, authors and version before substituting a source.
 - `read_reference`: inspect passages and requested original PDF page images.
+  PDF text extraction and page rendering have independent fallbacks. Image-only
+  PDFs return a first-page preview by default; request other pages explicitly.
+  A text query with no match does not suppress requested original pixels or prove
+  that the passage is absent. Check `text_match_found`, `page_image_status`, and
+  `processing_errors` to distinguish available material from reading limitations.
+  PDF tools must be installed in the OSVerify process's environment (inside WSL
+  when using WSL).
 
 Keep dependency checking separate from access: `available`/`fulltext` means readable
 material, not a verified theorem or a justified application. Record a stable
@@ -57,6 +64,6 @@ character counts are retained in navigation and access receipts. The full raw HT
 is still saved for inspection. Extraction remains heuristic; verify title, authors,
 version and the actual required passage independently.
 
-New stores use version 3. The new code refuses writes to prior version-2 stores,
-so earlier fulltext classifications cannot silently carry into a fresh-policy run.
+New stores use version 5. The new code refuses writes to earlier stores,
+so old retrieval outcomes cannot silently carry into a fresh-policy run.
 Use a new run directory; resume frozen runs with their original pinned runtime.

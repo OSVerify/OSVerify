@@ -323,7 +323,7 @@ def test_fallback_mode_reaches_every_role(tmp_path, mode, role):
     ReferenceBackend(Backend(), ReferenceStore(tmp_path/'refs')).generate(role, {}, {'properties': {}, 'required': []}, tmp_path/'attempt')
 
 
-@pytest.mark.parametrize('version', [2, 3])
+@pytest.mark.parametrize('version', [2, 3, 4])
 def test_previous_version_store_is_not_reused_by_new_classifier(tmp_path, version):
     atomic_json(tmp_path/'store-version.json', {'version': version})
     with pytest.raises(FrozenRunMismatch, match='version changed'):
