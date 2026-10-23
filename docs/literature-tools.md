@@ -4,7 +4,10 @@ New reviews started from the development source expose an invocation-scoped
 `osverify_literature` MCP server to the proposer, issue validator and feedback
 auditor. It is configured on that call's command line; user/global Codex settings
 and account configuration are unchanged. Ordinary solution calls and editorial,
-severity, segmentation and deduplication roles do not receive it.
+severity, segmentation and deduplication roles do not receive it. A solution review
+started with `--references` instead gives the same three roles a separate
+`osverify_supplied_references` server that reads only the run's frozen supplied files
+(see the [output contract](output-contract.md#supplied-reference-files)).
 
 - `search_literature(query, limit=5)` returns Crossref metadata candidates. It does
   not identify the correct work automatically or assert access to the full text.

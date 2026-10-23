@@ -31,6 +31,7 @@ from .storage import (
     read_json,
     run_lock,
 )
+from .supplied_references import SNAPSHOT, SuppliedReferenceBackend, SuppliedReferences
 from .trajectory import Trajectory
 from .workflow_models import (
     DuplicateAudit,
@@ -69,7 +70,7 @@ CHECKPOINT_FILES = frozenset(
         "interruption.json",
     }
 )
-CHECKPOINT_DIRECTORIES = ("jobs", "nodes")
+CHECKPOINT_DIRECTORIES = ("jobs", "nodes", SNAPSHOT)
 REQUIRED_CHECKPOINT_FILES = ("manifest.json", "report.json")
 
 
@@ -114,21 +115,25 @@ class DecomposingVerifier:
         self.backend = backend
         self.config = config or WorkflowConfig()
 
-    def verify(self, request: ReviewRequest, run_dir: str | Path) -> WorkflowReport:
+    def verify(
+        self, request: ReviewRequest, run_dir: str | Path, references: str | Path | None = None
+    ) -> WorkflowReport:
+        """``references``: optional directory of user-supplied files frozen with this run."""
         directory = Path(run_dir).expanduser().resolve()
         with run_lock(directory):
-            run = _Run(self.backend, self.config, request, directory)
+            run = _Run(self.backend, self.config, request, directory, references)
             return run.execute()
 
 
 class _Run:
-    def __init__(self, backend, config, request, directory):
+    def __init__(self, backend, config, request, directory, references=None):
         self.backend, self.config, self.request, self.directory = (
             backend,
             config,
             request,
             directory,
         )
+        self.references = SuppliedReferences(references) if references is not None else None
         self.stop = threading.Event()
         self.trace = Trajectory(directory)
         self.provenance = {
@@ -138,6 +143,8 @@ class _Run:
             "package_sha256": package_fingerprint(),
             "workflow": "global_priority_one_text_decomposition_v2",
         }
+        if self.references is not None:
+            self.provenance["supplied_references"] = self.references.provenance
         self.nodes, self.candidates, self.canonical, self.aliases = [], {}, {}, {}
         self.origins, self.outcomes, self.errors, self.warnings = {}, {}, [], []
         self.proposals_ready = {}
@@ -153,8 +160,15 @@ class _Run:
             "numbered_question": number_lines(request.question),
             "numbered_solution": number_lines(request.candidate_solution),
         }
+        # Proposer, issue validator and feedback auditor inputs; the frozen catalogue is
+        # added once the manifest accepts the snapshot.
+        self.review_inputs = self.inputs
         self.runner = JobRunner(
-            backend,
+            SuppliedReferenceBackend(
+                backend, directory / SNAPSHOT, self.provenance["supplied_references"]["reader"]
+            )
+            if self.references is not None
+            else backend,
             directory,
             config.max_attempts,
             self.provenance["package_sha256"],
@@ -189,6 +203,9 @@ class _Run:
             )
             self.trace.render()
             return report
+        if self.references is not None:
+            catalogue = self.references.freeze(self.directory)
+            self.review_inputs = {**self.inputs, "supplied_references": catalogue}
         (self.directory / "interruption.json").unlink(missing_ok=True)
         atomic_json(self.directory / "request.json", self.request.model_dump(mode="json"))
         atomic_text(self.directory / "question.md", self.request.question)
@@ -488,7 +505,7 @@ class _Run:
                     f"{sid}-proposer",
                     "proposer",
                     {
-                        **self.inputs,
+                        **self.review_inputs,
                         "scope": scope,
                         "max_issues": self.config.max_issues,
                         "focus_text": (self.directory / "nodes" / sid / "focus.md")
@@ -741,7 +758,7 @@ class _Run:
                     f"{key}-validation",
                     "issue_validator",
                     {
-                        **self.inputs,
+                        **self.review_inputs,
                         "scope": node["scope"],
                         "proposed_issue": issue.model_dump(mode="json"),
                     },
@@ -765,7 +782,7 @@ class _Run:
                     f"{key}-feedback",
                     "feedback_auditor",
                     {
-                        **self.inputs,
+                        **self.review_inputs,
                         "proposed_issue": issue.model_dump(mode="json"),
                         "issue_review": review.model_dump(mode="json"),
                     },

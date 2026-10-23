@@ -61,6 +61,25 @@ review returns `PASS`, meaning you can continue working. A partial `REJECT`
 concerns a demonstrated obstruction to the current route, not the original
 problem. Partial mode is available for solutions only.
 
+### Supply reference files
+
+When the solution cites a source that web search cannot retrieve, such as an old
+paper you found yourself, put the files in a directory and pass it:
+
+```bash
+uv run osverify verify --question question.md --solution solution.md \
+  --references refs/ --decompose --run-dir runs/my-solution
+```
+
+The proposer, issue validator and feedback auditor can list and read these files.
+PDFs (scans through their page images, which needs Poppler), PNG/JPEG images and
+UTF-8 text such as Markdown or LaTeX are readable. A supplied file is a source to
+compare, not proof: reviewers check that it is the cited work, then read the
+statement, its hypotheses and how the solution applies it. A file that is unreadable
+or does not contain the cited result leaves the citation uncertain. The files are
+copied into the run directory and become part of its inputs, so adding, changing or
+removing one needs a new run directory (macOS `.DS_Store` and `._*` files are ignored). Paper review does not accept `--references`.
+
 ## Review a paper
 
 Pass a LaTeX or Markdown paper:
@@ -229,6 +248,7 @@ for options on other commands.
 | `--timeout-seconds N` | `900` per verifier attempt. An explicit value also applies to paper classification and report writing. |
 | `--max-attempts N` | `2` attempts per verifier job per invocation. |
 | `--max-issues N` | No cap by default; applies to each proposer, including each segment. |
+| `--references DIR` | None; solution review only. Reference files the reviewers may read, frozen with the run (see [Supply reference files](#supply-reference-files)). |
 | `--codex-bin PATH` | `codex` on your PATH; choose a different compatible binary. |
 | `--codex-home PATH` | The selected CLI account directory; defaults to `$CODEX_HOME` or `~/.codex`. |
 | `--request-id NAME` | Label the review; automatic paper preparation otherwise uses the paper title. |
@@ -250,8 +270,8 @@ Use Ctrl+C to interrupt. Resume by rerunning the identical command with the same
 run directory. Completed, validated jobs are reused; unfinished jobs receive fresh
 attempts. A completed rejection-stop run keeps its original partial coverage.
 
-Inputs, mode, model/account, configuration and engine version must match the saved
-run. Use a new directory after changing them. Resume old source-based runs with
+Inputs (including `--references` files), mode, model/account, configuration and
+engine version must match the saved run. Use a new directory after changing them. Resume old source-based runs with
 their original version. Agent-skill runs pin their engine in `.osverify-runtime/`;
 see [historical runs](runtime-reference.md#historical-runs-and-skill-commands).
 

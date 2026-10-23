@@ -29,6 +29,7 @@ from .storage import (
     read_json,
     run_lock,
 )
+from .supplied_references import SNAPSHOT, SuppliedReferenceBackend, SuppliedReferences
 
 
 @dataclass(frozen=True)
@@ -55,12 +56,15 @@ class Verifier:
         run_dir: str | Path,
         *,
         proposals: ProposalBatch | None = None,
+        references: str | Path | None = None,
     ) -> ReviewReport:
+        """``references``: optional directory of user-supplied files frozen with this run."""
         directory = Path(run_dir).expanduser().resolve()
         with run_lock(directory):
-            return self._verify_locked(request, directory, proposals)
+            return self._verify_locked(request, directory, proposals, references)
 
-    def _verify_locked(self, request, directory, proposals):
+    def _verify_locked(self, request, directory, proposals, references=None):
+        supplied = SuppliedReferences(references) if references is not None else None
         provenance = {
             "request": request.model_dump(mode="json"),
             "provided_proposals": proposals.model_dump(mode="json") if proposals else None,
@@ -68,6 +72,8 @@ class Verifier:
             "backend": self.backend.identity,
             "package_sha256": package_fingerprint(),
         }
+        if supplied is not None:
+            provenance["supplied_references"] = supplied.provenance
         manifest = directory / "manifest.json"
         fingerprint = digest(provenance)
         if manifest.exists():
@@ -78,6 +84,7 @@ class Verifier:
                 )
         else:
             atomic_json(manifest, {"fingerprint": fingerprint, "provenance": provenance})
+        catalogue = supplied.freeze(directory) if supplied is not None else None
         (directory / "interruption.json").unlink(missing_ok=True)
         atomic_json(directory / "request.json", request.model_dump(mode="json"))
         atomic_text(directory / "question.md", request.question)
@@ -99,8 +106,15 @@ class Verifier:
             "numbered_question": number_lines(request.question),
             "numbered_solution": number_lines(request.candidate_solution),
         }
+        # Every role here (proposer, issue validator, feedback auditor) may read them.
+        backend = self.backend
+        if supplied is not None:
+            inputs["supplied_references"] = catalogue
+            backend = SuppliedReferenceBackend(
+                self.backend, directory / SNAPSHOT, provenance["supplied_references"]["reader"]
+            )
         runner = JobRunner(
-            self.backend, directory, self.config.max_attempts, provenance["package_sha256"]
+            backend, directory, self.config.max_attempts, provenance["package_sha256"]
         )
         batch = None
         outcomes = {}

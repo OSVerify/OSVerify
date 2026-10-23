@@ -229,6 +229,10 @@ feedback = [item.model_dump() for item in report.feedback]
 Set `mode="partial"` on `ReviewRequest` for unfinished progress. `--request` accepts
 the same JSON through the CLI. `--proposals` supplies a `ProposalBatch` and skips the
 proposer only in root-only solution review.
+`verify(request, run_dir, references=DIR)` (both verifiers; CLI `--references`)
+freezes user-supplied reference files with a solution review and lets its proposer,
+issue validator and feedback auditor read them; see the
+[output contract](output-contract.md#supplied-reference-files).
 
 Pass released feedback together with status to an external generator. The external
 framework owns revisions, submissions and final acceptance. In Rethlas-OSV, partial

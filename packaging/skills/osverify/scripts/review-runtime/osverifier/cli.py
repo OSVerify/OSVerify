@@ -56,6 +56,11 @@ def parser() -> argparse.ArgumentParser:
     verify.add_argument(
         "--proposals", type=Path, help="Optional existing ProposalBatch JSON; skip proposer"
     )
+    verify.add_argument(
+        "--references", type=Path, metavar="DIR",
+        help="Solution review: reference files (e.g. a cited paper as PDF) that the proposer, "
+        "validator and auditor may read; frozen with the run",
+    )
     verify.add_argument("--run-dir", type=Path, required=True)
     verify.add_argument(
         "--model", default=DEFAULT_MODEL,
@@ -171,6 +176,8 @@ def main(argv: list[str] | None = None) -> int:
             automatic = (arguments.targets, arguments.labels, arguments.ocr_dir)
             if arguments.review_kind != "paper" and any(automatic):
                 raise ValueError("--targets, --labels and --ocr-dir apply only to --review-type paper")
+            if arguments.review_kind == "paper" and arguments.references:
+                raise ValueError("--references applies only to solution review")
             if arguments.review_kind == "paper" and not arguments.request:
                 from osverifier_reports.paper_inputs import prepare_paper_review
 
@@ -232,7 +239,7 @@ def main(argv: list[str] | None = None) -> int:
                         max_attempts=arguments.max_attempts,
                         early_stop_on_reject=not arguments.no_early_stop,
                     ),
-                ).verify(request, arguments.run_dir)
+                ).verify(request, arguments.run_dir, references=arguments.references)
             else:
                 if arguments.no_early_stop:
                     raise ValueError("--no-early-stop requires --decompose")
@@ -243,7 +250,9 @@ def main(argv: list[str] | None = None) -> int:
                         max_issues=arguments.max_issues,
                         max_attempts=arguments.max_attempts,
                     ),
-                ).verify(request, arguments.run_dir, proposals=proposals)
+                ).verify(
+                    request, arguments.run_dir, proposals=proposals, references=arguments.references
+                )
         is_paper = arguments.command == "verify" and arguments.review_kind == "paper"
         is_ai = is_paper and arguments.field == "ai"
         if not is_paper:

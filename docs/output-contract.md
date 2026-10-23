@@ -145,6 +145,36 @@ Different issue chains run concurrently, defaulting to at most 16 active Codex c
 This is concurrency, not repeated voting. All three roles default to `xhigh` effort
 and live web search; explicit runtime overrides are preserved.
 
+## Supplied reference files
+
+`Verifier.verify(..., references=DIR)` and `DecomposingVerifier.verify(..., references=DIR)`
+(CLI `--references`, solution review only) freeze a directory of user-supplied files with
+the review. Each regular file is copied to `supplied-references/files/<name>`, and
+`supplied-references/catalogue.json` lists its `name` (relative path), `sha256`, `bytes`
+and `format` (`pdf`, `image`, `text` or `unsupported`, decided by content). Symbolic
+links and empty directories are refused; macOS Finder metadata (`.DS_Store`, `._*`) is
+ignored. `manifest.json` provenance gains `supplied_references`: the file hashes and the
+code hashes of the reader modules, which are checked again before each reading call.
+Runs without references keep their previous provenance and model inputs.
+
+Only proposer, issue validator and feedback auditor inputs contain
+`supplied_references` (the catalogue, without paths); segmentation and deduplication
+inputs are unchanged. Those three roles get an invocation-scoped
+`osverify_supplied_references` MCP server, the `--supplied` mode of
+`osverifier_reports.reference_tools`, with `list_supplied_references` and
+`read_supplied_reference`. It accepts only catalogue names, re-checks a file's hash on
+every read, and has no network or other filesystem access. Derived PDF text and page
+images go to that attempt's `supplied-reference-reads/`, and its tool journal to
+`supplied-reference-calls.jsonl`; both are hashed into the job's cached result.
+
+Decisions and output fields are unchanged. Under policy 2.5 a supplied file is a source
+to read and compare under the citation procedure, not proof: reviewers check that it is
+the cited work, then the statement and the submission's application; an unreadable or
+non-matching file leaves the dependency uncertain. Resume requires identical directory
+contents. The frozen copy and its catalogue are verified before any model call (and
+before a quota interruption record is cleared), and are part of the completion checkpoint. To add references to an existing review, start a new run
+directory (Rethlas-OSV's `--seed-from` does this for an experiment).
+
 ## Diagnostics and migration
 
 `diagnostics.json` stores issue counts and statuses, missing-content flags, withheld
