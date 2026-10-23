@@ -159,7 +159,7 @@ def project(core: dict, field: str = "math", diagnostics: dict | None = None, *,
     progress = paper_progress(core, diagnostics or {}, directory=directory, images=images) if diagnostics or field == "ai" else None
     run_status = ("running" if progress.execution == "running" else "completed" if progress.execution == "completed" else "incomplete") if progress else core["run_status"]
     termination = core.get("termination_reason")
-    if progress and termination == "execution_incomplete":
+    if progress and termination in ("execution_incomplete", "review_inconclusive"):
         termination = "all_tasks_finished" if progress.execution == "completed" else "execution_" + progress.execution
     return PaperReport(
         schema_version="paper-1.2" if progress else "paper-1.1",

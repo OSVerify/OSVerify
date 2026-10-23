@@ -3,4 +3,4 @@
 from .models import ReviewReport, ReviewRequest
 
 __all__ = ["ReviewReport", "ReviewRequest"]
-__version__ = "0.6.2"
+__version__ = "0.6.3"

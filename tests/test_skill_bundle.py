@@ -118,8 +118,11 @@ def test_pdf_runtime_tampering_does_not_change_native_runtime(bundle, tmp_path):
 @pytest.mark.parametrize("runtime", ["runtime", "ocr-runtime", "review-runtime"])
 def test_bundled_scheduler_matches_tested_source_and_default(bundle, tmp_path, runtime):
     engine = bundle / "scripts" / runtime
-    for name in ("scheduling.py", "workflow.py", "pipeline.py", "workflow_models.py"):
-        assert (engine / "osverifier" / name).read_bytes() == (REPO / "src/osverifier" / name).read_bytes()
+    # New runs pin review-runtime, which must ship the tested scheduler. The legacy
+    # runtimes stay frozen so runs made with them keep their fingerprints on resume.
+    if runtime == "review-runtime":
+        for name in ("scheduling.py", "workflow.py", "pipeline.py", "workflow_models.py"):
+            assert (engine / "osverifier" / name).read_bytes() == (REPO / "src/osverifier" / name).read_bytes()
     # Import only the relocated engine, not this checkout's editable install.
     code = """
 import sys

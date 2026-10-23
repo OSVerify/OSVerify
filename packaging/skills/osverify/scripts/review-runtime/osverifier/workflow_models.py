@@ -56,7 +56,10 @@ class DuplicateAudit(StrictModel):
 class WorkflowReport(ReviewReport):
     schema_version: Literal["3.0"] = "3.0"
     termination_reason: (
-        Literal["all_nodes_reviewed", "audited_rejection", "execution_incomplete"] | None
+        Literal[
+            "all_nodes_reviewed", "audited_rejection", "review_inconclusive", "execution_incomplete"
+        ]
+        | None
     ) = None
     coverage_complete: bool = False
     trajectory_artifact: str = "trajectory.jsonl"

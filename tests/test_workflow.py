@@ -209,6 +209,7 @@ def test_auditor_veto_does_not_stop_or_authorize_clean_handoff(tmp_path):
     backend = FixtureBackend({"root": ["reject"]}, reject=["reject"], veto=["reject"])
     report = run(backend, tmp_path)
     assert report.decision is None and report.run_status == "incomplete"
+    assert report.termination_reason == "review_inconclusive"
     assert not backend.cancelled.is_set()
     assert sum(role == "proposer" for role, _ in backend.calls) == 3
 
@@ -218,7 +219,42 @@ def test_bad_partition_is_not_clean_handoff(tmp_path):
     backend.bad_partition = True
     report = run(backend, tmp_path)
     assert report.decision is None and report.run_status == "incomplete"
+    assert report.termination_reason == "execution_incomplete"
     assert read_json(tmp_path / "diagnostics.json")["decomposition"] == "failed"
+
+
+class UnlocatableSourceBackend(FixtureBackend):
+    def __init__(self, cause):
+        super().__init__({"root": ["cited source"]} if cause != "search" else {})
+        self.cause = cause
+
+    def _generate(self, role, payload, schema, attempt_dir):
+        result = super()._generate(role, payload, schema, attempt_dir)
+        if role == "proposer" and self.cause == "search" and payload["scope"]["scope_id"] == "root":
+            result.update(search_status="incomplete", search_limitations=["Source not found"])
+        if role == "issue_validator" and self.cause == "unresolved":
+            result.update(assessment="unresolved", impact="unknown", completion_effect="uncertain",
+                          rejection_supported=False, feedback_candidates=[])
+        if role == "issue_validator" and self.cause == "failure":
+            raise ValueError("fixture contract failure")
+        return result
+
+
+@pytest.mark.parametrize("cause", ["unresolved", "search"])
+def test_finished_but_inconclusive_review_is_distinguished_from_unfinished(tmp_path, cause):
+    report = run(UnlocatableSourceBackend(cause), tmp_path)
+    assert report.decision is None and report.run_status == "incomplete"
+    assert report.termination_reason == "review_inconclusive" and not report.coverage_complete
+    assert "Resuming replays the same results" in (tmp_path / "report.md").read_text()
+    fresh = UnlocatableSourceBackend(cause)
+    assert run(fresh, tmp_path) == report
+    assert fresh.calls == []
+
+
+def test_failed_job_remains_execution_incomplete(tmp_path):
+    report = run(UnlocatableSourceBackend("failure"), tmp_path)
+    assert report.run_status == "incomplete"
+    assert report.termination_reason == "execution_incomplete"
 
 
 @pytest.mark.parametrize("confirmed,expected_reviews", [(True, 1), (False, 2)])

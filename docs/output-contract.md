@@ -20,7 +20,11 @@ The stop cancels active work for that sample and skips queued issues/nodes. An
 intentional stop is a completed workflow with partial coverage, never a claim that
 all mathematical content was reviewed. Its reason is `audited_rejection`; fully
 finished traversal uses `all_nodes_reviewed`; unfinished execution/audits use
-`execution_incomplete`. Human readiness additionally requires complete planned coverage.
+`execution_incomplete`. When every planned job finished but unresolved or audit-blocked
+findings, or a search the proposer could not finish (for example an unlocatable cited
+source), leave the run `incomplete`, the reason is `review_inconclusive`: resume replays
+the same cached results and cannot change it. Human readiness additionally requires
+complete planned coverage.
 
 Each segment retains the full original request, numbered source, before/after context
 summaries, and verbatim focused excerpt. Only root has responsibility to check that

@@ -335,6 +335,16 @@ class _Run:
             finished=finished,
         )
         early = self.stop_basis is not None
+        # Every planned job has a validated cached result, yet unresolved or audit-blocked
+        # findings, or a search the proposer could not finish (e.g. an unlocatable cited
+        # source), prevent a conclusion. Resume replays these caches and cannot change it.
+        settled = (
+            not self.errors
+            and not self.stop.is_set()
+            and self.decomposition_status == "completed"
+            and all(node["status"] in ("completed", "incomplete") for node in self.nodes)
+            and all(self.outcomes.get(key) is not None for key in self.canonical)
+        )
         values = report.model_dump(mode="json")
         values.update(
             schema_version="3.0",
@@ -344,6 +354,8 @@ class _Run:
                 if early
                 else "all_nodes_reviewed"
                 if report.run_status == "completed"
+                else "review_inconclusive"
+                if settled
                 else "execution_incomplete"
             )
             if finished
@@ -385,6 +397,8 @@ class _Run:
         body += f"Termination: {result.termination_reason or 'running'}. Full planned scope coverage: {coverage}.\n\n"
         if early:
             body += "Stopped intentionally after an audited rejection. Remaining work was skipped or cancelled; this is not a completed review of every node.\n\n"
+        elif result.termination_reason == "review_inconclusive":
+            body += "Every planned review task finished, but unresolved findings or an unfinished search prevent a conclusion. Resuming replays the same results; a revised solution or a human must settle them.\n\n"
         body += "| Node | Original lines | Status | Decision | Candidates | Canonical issues |\n| --- | --- | --- | --- | --- | --- |\n"
         for node in self.nodes:
             sid = node["scope"]["scope_id"]
