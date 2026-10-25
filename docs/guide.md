@@ -247,6 +247,7 @@ for options on other commands.
 | `--web-search MODE` | `live`; also accepts `cached` or `disabled`. |
 | `--timeout-seconds N` | `900` per verifier attempt. An explicit value also applies to paper classification and report writing. |
 | `--max-attempts N` | `2` attempts per verifier job per invocation. |
+| `--timeout-retries N` | `1`. A verifier attempt that times out earns one more attempt, up to N per job per invocation; once a job has timed out, its later attempts (also after a resume) run with doubled time limits. |
 | `--max-issues N` | No cap by default; applies to each proposer, including each segment. |
 | `--references DIR` | None; solution review only. Reference files the reviewers may read, frozen with the run (see [Supply reference files](#supply-reference-files)). |
 | `--codex-bin PATH` | `codex` on your PATH; choose a different compatible binary. |

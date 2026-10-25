@@ -249,16 +249,16 @@ def run_paper(args, request, backend, classifier=None):
         try:
             if args.decompose:
                 core = DecomposingVerifier(backend, WorkflowConfig(
-                    workers=args.workers, max_issues=args.max_issues, max_attempts=args.max_attempts,
+                    workers=args.workers, max_issues=args.max_issues, max_attempts=args.max_attempts, timeout_retries=args.timeout_retries,
                     early_stop_on_reject=args.early_stop,
                 )).verify(request, core_dir)
             else:
                 if args.early_stop:
                     raise ValueError("--early-stop requires --decompose")
-                core = Verifier(backend, RunConfig(workers=args.workers, max_issues=args.max_issues, max_attempts=args.max_attempts)).verify(request, core_dir)
+                core = Verifier(backend, RunConfig(workers=args.workers, max_issues=args.max_issues, max_attempts=args.max_attempts, timeout_retries=args.timeout_retries)).verify(request, core_dir)
             report = projected(core.model_dump(mode="json"))
             if not (core_dir / 'interruption.json').exists() and getattr(core, 'termination_reason', None) != 'audited_rejection':
-                supplements = reconcile_references(request, reference_source_backend, reference_store, core_dir, directory, RunConfig(workers=args.workers, max_issues=args.max_issues, max_attempts=args.max_attempts))
+                supplements = reconcile_references(request, reference_source_backend, reference_store, core_dir, directory, RunConfig(workers=args.workers, max_issues=args.max_issues, max_attempts=args.max_attempts, timeout_retries=args.timeout_retries))
                 for index, (destination, extra, dependencies) in enumerate(supplements):
                     report.supplemental_reviews.append({'artifact': str(destination.relative_to(directory)), 'run_status': extra.run_status})
                     checked = {(row.get('role', 'proposer'), (row.get('scope') or {}).get('scope_id', 'unknown'), dependency_key(c)) for row in reference_observations(destination) for c in row['checks'] if c['status'] == 'verified'}

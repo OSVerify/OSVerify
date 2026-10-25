@@ -173,6 +173,7 @@ class _Run:
             config.max_attempts,
             self.provenance["package_sha256"],
             self.trace.record,
+            timeout_retries=config.timeout_retries,
         )
 
     def cancel(self):

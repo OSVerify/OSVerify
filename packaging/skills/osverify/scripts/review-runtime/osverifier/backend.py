@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextvars
 import json
 import os
 import re
@@ -123,6 +124,11 @@ def codex_error_message(event: dict) -> str | None:
     return " ".join(str(message).split())[:500]
 
 
+# Multiplies the configured time limits for the call in progress. JobRunner raises
+# it for a job that timed out before, so a retry gets longer instead of the same cut.
+DEADLINE_SCALE = contextvars.ContextVar("deadline_scale", default=1)
+
+
 # Default model; any model the selected Codex account offers can be chosen instead.
 DEFAULT_MODEL = "gpt-6-astra"
 # Shown when the Codex account has no model list yet (e.g. before the first sign-in).
@@ -220,6 +226,7 @@ class CodexBackend:
             "timeout_seconds": self.timeout_seconds,
             "idle_timeout_seconds": self.idle_timeout_seconds,
             "web_search": self.web_search,
+            "reasoning_summary": "auto",
             "sandbox": "read-only",
             "ignore_user_config": True,
             "connection_config": self.connection.identity,
@@ -286,6 +293,10 @@ class CodexBackend:
             'approval_policy="never"',
             "-c",
             f"model_reasoning_effort={json.dumps(self.reasoning_effort)}",
+            # Summaries surface reasoning as exec events, so the idle deadline sees a
+            # model that is thinking; without them long silent reasoning looks stalled.
+            "-c",
+            'model_reasoning_summary="auto"',
             "-c",
             f"web_search={json.dumps(self.web_search)}",
             "-",
@@ -300,9 +311,16 @@ class CodexBackend:
             argv[2:2] = [arg for path in images for arg in ("--image", str(path))]
         if ephemeral:
             argv.insert(2, "--ephemeral")
+        scale = DEADLINE_SCALE.get()
+        timeout = None if self.timeout_seconds is None else self.timeout_seconds * scale
+        idle = None if self.idle_timeout_seconds is None else self.idle_timeout_seconds * scale
         atomic_json(
             attempt_dir / "command.json",
-            {"argv": self.connection.redact(argv), "backend": {**self.identity, "ephemeral": ephemeral}},
+            {
+                "argv": self.connection.redact(argv),
+                "backend": {**self.identity, "ephemeral": ephemeral},
+                "limits": {"timeout_seconds": timeout, "idle_timeout_seconds": idle},
+            },
         )
         environment = os.environ.copy()
         if self.codex_home is not None:
@@ -328,8 +346,7 @@ class CodexBackend:
                     },
                 )
                 communicate_with_quota_detection(
-                    process, prompt, self.timeout_seconds, attempt_dir, self.halt_for_quota,
-                    idle_timeout=self.idle_timeout_seconds,
+                    process, prompt, timeout, attempt_dir, self.halt_for_quota, idle_timeout=idle
                 )
             except BaseException:
                 stop_process(process)

@@ -66,3 +66,56 @@ def test_watchdog_backend_cleans_up_process(tmp_path):
     assert not backend._processes
 
 
+
+
+class Timeouts:
+    identity = {"kind": "scripted_demo"}
+
+    def __init__(self, error=subprocess.TimeoutExpired):
+        self.error, self.scales = error, []
+
+    def generate(self, role, payload, schema, attempt_dir):
+        from osverifier.backend import DEADLINE_SCALE
+        self.scales.append(DEADLINE_SCALE.get())
+        raise self.error('fixture', 0.1)
+
+
+def test_timeouts_earn_bounded_retries_with_doubled_limits(tmp_path):
+    from pydantic import BaseModel
+
+    from osverifier.jobs import JobFailed, JobRunner
+    from osverifier.storage import package_fingerprint
+
+    class Output(BaseModel):
+        ok: bool
+    backend = Timeouts()
+    runner = JobRunner(backend, tmp_path, 2, package_fingerprint(), timeout_retries=1)
+    with pytest.raises(JobFailed, match='after 3 attempts'):
+        runner.call('proposer', 'proposer', {}, Output, lambda value: None)
+    assert backend.scales == [1, 2, 2]
+    # A resumed job that timed out before starts with the longer limits.
+    with pytest.raises(JobFailed):
+        runner.call('proposer', 'proposer', {}, Output, lambda value: None)
+    assert backend.scales[3:] == [2, 2, 2]
+
+    other = Timeouts(error=lambda *_: ValueError('malformed'))
+    runner = JobRunner(other, tmp_path / 'other', 2, package_fingerprint(), timeout_retries=1)
+    with pytest.raises(JobFailed, match='after 2 attempts'):
+        runner.call('proposer', 'proposer', {}, Output, lambda value: None)
+    assert other.scales == [1, 1]
+
+
+def test_codex_backend_scales_limits_for_retries(tmp_path):
+    from osverifier.backend import DEADLINE_SCALE, CodexBackend
+    binary = tmp_path / 'fake-codex'
+    binary.write_text(f'#!{sys.executable}\nimport sys,time\nif "--version" in sys.argv:\n print("fixture"); sys.exit(0)\ntime.sleep(10)\n')
+    binary.chmod(0o755)
+    backend = CodexBackend(model='fixture', codex_bin=str(binary), timeout_seconds=5, idle_timeout_seconds=0.15)
+    token = DEADLINE_SCALE.set(2)
+    try:
+        with pytest.raises(BackendStalled):
+            backend.generate('proposer', {}, {}, tmp_path / 'attempt')
+    finally:
+        DEADLINE_SCALE.reset(token)
+    assert read_json(tmp_path / 'attempt/command.json')['limits'] == {'timeout_seconds': 10, 'idle_timeout_seconds': 0.3}
+    assert read_json(tmp_path / 'attempt/stall.json')['idle_seconds'] == 0.3

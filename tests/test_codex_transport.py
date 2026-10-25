@@ -58,6 +58,11 @@ def test_cli_transport_uses_files_argv_and_invocation_scoped_auth(fake_codex, tm
     command = json.loads((attempt / "command.json").read_text())["argv"]
     assert command[command.index("--sandbox") + 1] == "read-only"
     assert "--ignore-user-config" in command
+    # Reasoning summaries become exec events, which keep the idle deadline informed.
+    assert 'model_reasoning_summary="auto"' in command
+    assert json.loads((attempt / "command.json").read_text())["limits"] == {
+        "timeout_seconds": 900, "idle_timeout_seconds": None
+    }
     assert "--output-schema" in command
     config = [command[index + 1] for index, arg in enumerate(command) if arg == "-c"]
     assert 'model_reasoning_effort="xhigh"' in config

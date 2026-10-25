@@ -96,6 +96,11 @@ def parser() -> argparse.ArgumentParser:
     verify.add_argument("--no-report", action="store_true", help="Skip automatic reader/PDF reports (severity classification still runs)")
     verify.add_argument("--max-attempts", type=int, default=2)
     verify.add_argument(
+        "--timeout-retries", type=int, default=1,
+        help="Extra attempts a call may earn by timing out; retries after a timeout get "
+        "doubled time limits (default: 1)",
+    )
+    verify.add_argument(
         "--decompose",
         action="store_true",
         help="Review root and one original-text decomposition layer with global priority scheduling",
@@ -237,6 +242,7 @@ def main(argv: list[str] | None = None) -> int:
                         workers=arguments.workers,
                         max_issues=arguments.max_issues,
                         max_attempts=arguments.max_attempts,
+                        timeout_retries=arguments.timeout_retries,
                         early_stop_on_reject=not arguments.no_early_stop,
                     ),
                 ).verify(request, arguments.run_dir, references=arguments.references)
@@ -249,6 +255,7 @@ def main(argv: list[str] | None = None) -> int:
                         workers=arguments.workers,
                         max_issues=arguments.max_issues,
                         max_attempts=arguments.max_attempts,
+                        timeout_retries=arguments.timeout_retries,
                     ),
                 ).verify(
                     request, arguments.run_dir, proposals=proposals, references=arguments.references

@@ -391,6 +391,7 @@ def parser():
             cmd.add_argument("--request-id", default="paper-pdf")
             cmd.add_argument("--workers", type=int, default=16)
             cmd.add_argument("--max-attempts", type=int, default=2)
+            cmd.add_argument("--timeout-retries", type=int, default=1)
             cmd.add_argument("--max-issues", type=int)
             cmd.add_argument("--root-only", action="store_true")
             cmd.add_argument("--early-stop", action="store_true")

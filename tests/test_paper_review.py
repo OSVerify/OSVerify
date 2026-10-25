@@ -44,7 +44,7 @@ class RepairingBackend(FixtureBackend):
 
 def args(tmp_path, early_stop=False):
     return SimpleNamespace(run_dir=tmp_path, decompose=True, early_stop=early_stop,
-                           workers=1, max_issues=None, max_attempts=1, model="test",
+                           workers=1, max_issues=None, max_attempts=1, timeout_retries=0, model="test",
                            codex_bin="codex", codex_home=None)
 
 

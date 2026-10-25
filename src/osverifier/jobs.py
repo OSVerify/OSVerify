@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import hashlib
+import subprocess
 from collections.abc import Callable
 from pathlib import Path
 from threading import Lock
 
 from pydantic import BaseModel
 
-from .backend import Backend, BackendCancelled
+from .backend import DEADLINE_SCALE, Backend, BackendCancelled
 from .connection_config import redact_backend_text
 from .quota import QuotaExhausted, record_quota
 from .storage import FrozenRunMismatch, atomic_json, digest, package_fingerprint, read_json
@@ -17,6 +18,11 @@ from .storage import FrozenRunMismatch, atomic_json, digest, package_fingerprint
 
 class JobFailed(RuntimeError):
     pass
+
+
+# Failure types recorded for an attempt that ran out of time (BackendStalled is a
+# TimeoutExpired raised by the idle deadline).
+TIMEOUT_FAILURES = ("TimeoutExpired", "BackendStalled")
 
 
 class JobRunner:
@@ -27,10 +33,12 @@ class JobRunner:
         max_attempts: int,
         package_sha256: str,
         event_sink=None,
+        timeout_retries: int = 0,
     ):
         self.backend = backend
         self.run_dir = run_dir
         self.max_attempts = max_attempts
+        self.timeout_retries = timeout_retries
         self.package_sha256 = package_sha256
         self.event_sink = event_sink
         self._quota_lock = Lock()
@@ -118,7 +126,16 @@ class JobRunner:
             )
             return parsed
 
-        for _ in range(self.max_attempts):
+        # Each timed-out attempt earns one more attempt, up to timeout_retries per
+        # invocation. Once the job has timed out, including in an earlier invocation,
+        # its attempts run with doubled time limits instead of the same cut.
+        timed_out = any(
+            read_json(failure).get("type") in TIMEOUT_FAILURES
+            for failure in directory.glob("attempt-*/failure.json")
+        )
+        attempts = timeouts = 0
+        while attempts < self.max_attempts + min(timeouts, self.timeout_retries):
+            attempts += 1
             self.check_quota()
             previous = [
                 int(p.name.split("-")[-1]) for p in directory.glob("attempt-*") if p.is_dir()
@@ -132,6 +149,7 @@ class JobRunner:
                 attempt=attempt.name,
                 input_artifact=str(frozen_path.relative_to(self.run_dir)),
             )
+            scale = DEADLINE_SCALE.set(2 if timed_out else 1)
             try:
                 raw = self.backend.generate(role, payload, schema, attempt)
                 atomic_json(attempt / "response.json", raw)
@@ -166,12 +184,17 @@ class JobRunner:
                     attempt=attempt.name,
                     error_type=type(exc).__name__,
                 )
+                if isinstance(exc, subprocess.TimeoutExpired):
+                    timed_out = True
+                    timeouts += 1
                 self.check_quota()
                 continue
             except BaseException as exc:
                 atomic_json(attempt / "interrupted.json", {"type": type(exc).__name__})
                 self.emit("attempt_interrupted", job=job_key, role=role, attempt=attempt.name)
                 raise
+            finally:
+                DEADLINE_SCALE.reset(scale)
             output = parsed.model_dump(mode="json")
             artifacts = getattr(self.backend, "attempt_artifacts", None)
             auxiliary = artifacts(attempt) if artifacts else {}
@@ -194,6 +217,4 @@ class JobRunner:
                 output_sha256=digest(output),
             )
             return parsed
-        raise JobFailed(
-            f"{job_key}: no valid result after {self.max_attempts} attempts this invocation"
-        )
+        raise JobFailed(f"{job_key}: no valid result after {attempts} attempts this invocation")

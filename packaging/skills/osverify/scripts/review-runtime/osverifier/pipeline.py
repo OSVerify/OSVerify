@@ -37,10 +37,14 @@ class RunConfig:
     max_issues: int | None = None
     workers: int = 16
     max_attempts: int = 2
+    # Extra attempts a job may earn by timing out; see JobRunner.call.
+    timeout_retries: int = 1
 
     def __post_init__(self):
         if min(self.workers, self.max_attempts) < 1:
             raise ValueError("workers and max_attempts must be positive")
+        if self.timeout_retries < 0:
+            raise ValueError("timeout_retries must not be negative")
         if self.max_issues is not None and self.max_issues < 1:
             raise ValueError("max_issues must be positive when supplied; None means no count cap")
 
@@ -114,7 +118,8 @@ class Verifier:
                 self.backend, directory / SNAPSHOT, provenance["supplied_references"]["reader"]
             )
         runner = JobRunner(
-            backend, directory, self.config.max_attempts, provenance["package_sha256"]
+            backend, directory, self.config.max_attempts, provenance["package_sha256"],
+            timeout_retries=self.config.timeout_retries,
         )
         batch = None
         outcomes = {}
